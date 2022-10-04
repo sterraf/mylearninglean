@@ -1,6 +1,8 @@
 import data.set.basic data.set.lattice data.nat.parity
 import tactic.linarith
 
+import data.real.basic
+
 open set nat function
 
 open_locale classical
@@ -46,10 +48,8 @@ variables s t u : set α
 example (h : s ⊆ t) : s ∩ u ⊆ t ∩ u :=
 begin
   rw [subset_def, inter_def, inter_def],
-  rw subset_def at h,
-  dsimp,
-  rintros x ⟨xs, xu⟩,
-  exact ⟨h _ xs, xu⟩,
+  rw [subset_def] at h,
+  finish,
 end
 
 example (h : s ⊆ t) : s ∩ u ⊆ t ∩ u :=

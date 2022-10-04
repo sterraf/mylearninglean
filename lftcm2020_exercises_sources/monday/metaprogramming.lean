@@ -17,7 +17,29 @@ and the corresponding chapter of the course notes:
 https://github.com/blanchette/logical_verification_2020/blob/master/lean/love07_metaprogramming_exercise_sheet.lean
 https://github.com/blanchette/logical_verification_2020/raw/master/hitchhikers_guide.pdf
 
+-/
 
+-- Preheating...
+
+-- First example from Video 5.
+
+#check list.mfirst (λx, trace `(5))
+
+-- This one already works (serendipity!)
+meta def assump' : tactic unit :=
+do
+  ctxt ← local_context,
+  list.mfirst (λx, exact x) ctxt
+
+-- Shorter version (blind guess)
+meta def assump : tactic unit := local_context >>= list.mfirst (λx, exact x)
+
+example (A B C : Prop) (ha : A) (hb : B) (hc : C) : C :=
+by assump
+
+example (n: ℕ)(hx: n+0=5): n=5 := by assump
+
+/-!
 
 ## Exercise 1
 
@@ -35,20 +57,60 @@ Note: this exists as `tactic.interactive.contradiction`.
 
 -/
 
+-- First try: only proves falsity, but also performs modus ponens!
+meta def tactic.interactive.contr' : tactic unit :=
+do
+ctx ← local_context,
+list.mfirst
+  (λ e, list.mfirst (λx, 
+  -- Shorter than the next 3 lines: `to_expr ``(%%x %%e) >>= exact`
+  do
+  apli ← to_expr ``(%%x %%e),
+  exact apli
+ ) ctx) ctx,
+done
+
+-- Even shorter
+-- meta def tactic.interactive.contr' : tactic unit :=
+-- local_context >>= 
+-- λ ctx, list.mfirst
+-- (λ e, list.mfirst (λx, to_expr ``(%%x %%e) >>= exact ) ctx) ctx
+
+example (P Q R : Prop) (hp : P) (hq : Q) (hr : ¬ R) (hnq : ¬ Q) : false :=
+by contr'
+
+
+example (P Q R : Prop) (hnq : ¬ Q) (hp : P) (hq : Q) (hr : ¬ R) : 0 = 1 :=
+by contr'
+
+
+example (P Q R : Prop) (hp : P) (hq : Q) (hr : ¬ R) (hnq : Q → false) : false :=
+by contr'
+
+-- Unexpected!
+example (P Q R : Prop) (hp : P) (hq : Q) (hr : ¬ R) (hqr : Q → R) : R :=
+by contr'
+
 meta def tactic.interactive.contr : tactic unit :=
-admit -- change this
+do
+tgt ← target,
+ctx ← local_context,
+list.mfirst
+  (λ e, list.mfirst (λx, to_expr ``(absurd %%x %%e) >>= exact)
+   ctx) ctx,
+done
 
 example (P Q R : Prop) (hp : P) (hq : Q) (hr : ¬ R) (hnq : ¬ Q) : false :=
 by contr
 
-
-example (P Q R : Prop) (hnq : ¬ Q) (hp : P) (hq : Q) (hr : ¬ R) : 0 = 1 :=
+example (P Q R : Prop) (hp : P) (hq : Q) (hr : ¬ R) (hnq : ¬ Q) : false :=
 by contr
 
+example (P Q R : Prop) (hnq : ¬ Q) (hp : P) (hq : Q) (hr : ¬ R) : 0 = 1 :=
+by exact false.rec.{0} (0 = 1) (hnq hq)
 
 example (P Q R : Prop) (hp : P) (hq : Q) (hr : ¬ R) (hnq : Q → false) : false :=
 by contr
-
 
 
 /-!

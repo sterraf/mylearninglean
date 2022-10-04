@@ -143,7 +143,10 @@ include h₁ h₂
 -- demonstrate variations on `apply` and `have`
 
 example : a + c ≤ b + d :=
-sorry
+begin
+  apply add_le_add h₁,
+  assumption
+end
 
 end
 
@@ -158,7 +161,14 @@ variables {f g : ℝ → ℝ} {a b : ℝ}
 
 theorem fn_ub_add (hfa : fn_ub f a) (hgb : fn_ub g b) :
   fn_ub (λ x, f x + g x) (a + b) :=
-sorry
+begin
+  intro x,
+  specialize hfa x, -- corresponds to a drule
+  dsimp, -- definitional simplification
+  have h: g x ≤ b := hgb x, -- trying Isar style; unfolding not needed
+  apply add_le_add,
+  assumption,assumption,
+end
 
 end
 
@@ -169,7 +179,10 @@ end
 -- demonstrate `use` and `norm_num`
 
 example : ∃ x : ℝ, 2 < x ∧ x < 3 :=
-sorry
+begin
+  use 2.1,
+  norm_num
+end
 
 -- demonstrate `cases` and `use`, and use `fn_ub_add`
 
@@ -181,7 +194,14 @@ variables {f g : ℝ → ℝ}
 
 example (ubf : fn_has_ub f) (ubg : fn_has_ub g) :
   fn_has_ub (λ x, f x + g x) :=
-sorry
+begin
+  cases ubf with a ha,
+  cases ubg with b hb,
+
+  use a + b,
+  apply fn_ub_add,
+  assumption,assumption, -- better evaluate the theorem at ha and hb
+end
 
 end
 
@@ -194,8 +214,12 @@ section
 variable {f : ℝ → ℝ}
 
 example (h : ∀ a, ∃ x, f x > a) : ¬ fn_has_ub f :=
-sorry
-
+begin
+  intro hf,
+  cases hf with b hb,
+  cases h b with c hc,
+  specialize hb c,
+  linarith,
 end
 
 /-!
@@ -209,13 +233,27 @@ variables {x y : ℝ}
 -- demonstrate `split`
 
 example (h₀ : x ≤ y) (h₁ : ¬ y ≤ x) : x ≤ y ∧ x ≠ y :=
-sorry
+begin
+  split,
+  assumption,
+  linarith
+end
 
 -- demonstrate `cases`, `h.1`, `h.2`
 
 example (h : x ≤ y ∧ x ≠ y) : ¬ y ≤ x :=
-sorry
+begin
+  intro ylex,
+  cases h with hl hr,
+  have eqxy: x=y := by apply ge_antisymm ylex hl,
+  exact hr eqxy -- provided by `library_search,`
+end
 
+example (h : x ≤ y ∧ x ≠ y) : ¬ y ≤ x :=
+begin
+  intro ylex,
+  have eqxy: x=y := by apply ge_antisymm ylex h.1,
+  exact h.2 eqxy
 end
 
 /-!
@@ -231,7 +269,17 @@ variables x y : ℝ
 #check @abs_of_neg
 
 example : x < abs y → x < y ∨ x < -y :=
-sorry
+begin
+  intro h,
+  cases le_or_gt 0 y, -- erule
+  have := abs_of_nonneg h_1,
+  rw this at h,
+  left,
+  assumption,
+  rw abs_of_neg h_1 at h,
+  right,
+  assumption,
+end
 
 end
 
@@ -244,3 +292,6 @@ proof by contradiction, and more.
 But this should get you started, and you can consult the resources for more.
 -/
 
+end
+
+end
