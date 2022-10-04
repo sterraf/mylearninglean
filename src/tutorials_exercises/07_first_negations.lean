@@ -49,13 +49,22 @@ open int
 -- 0045
 example (n : ℤ) (h_even : even n) (h_not_even : ¬ even n) : 0 = 1 :=
 begin
-  sorry
+  exfalso,
+  exact (h_not_even h_even), -- parens not needed!
 end
 
 -- 0046
 example (P Q : Prop) (h₁ : P ∨ Q) (h₂ : ¬ (P ∧ Q)) : ¬ P ↔ Q :=
 begin
-  sorry
+  split,
+  { intro nP,
+    cases h₁,
+    exfalso,
+    exact nP h₁,
+    assumption },
+  intro q,
+  intro p,
+  exact h₂ ⟨p,q⟩, -- constructs the conjunction
 end
 
 /-
@@ -120,7 +129,9 @@ non Q ⇒ non P.
 -- 0047
 example (P Q : Prop) (h : ¬ Q → ¬ P) : P → Q :=
 begin
-  sorry
+  intro p,
+  by_contradiction nq,
+  exact h nq p,
 end
 
 /-
@@ -142,8 +153,32 @@ In the next exercise, we'll use
 -- 0048
 example (n : ℤ) : even (n^2) ↔ even n :=
 begin
-  sorry
+  split,
+  { contrapose,
+    intro odd_n,
+    rewrite ← odd_iff_not_even at *,
+    rcases odd_n with ⟨k,rfl⟩,
+    use 2*k^2 + 2*k,
+    ring, },
+  -- contrapose,
+  -- intro odd_n2,
+  -- rewrite ← odd_iff_not_even at *,
+  -- cases odd_n2 with k hk,
+  intro even_n,
+  by_contradiction odd_n2,
+  rewrite ← odd_iff_not_even at odd_n2,
+  rcases even_n with ⟨k,rfl⟩,
+  cases odd_n2 with m hm,
+  have : 2 * (2* k^2) = 2 * m + 1 := by linarith, -- `ring` won't solve this
+  have : (0 : ℤ) = 1,
+  calc
+    0   = 2 * (2 * k^2) % 2 : by { rw mul_mod_right, } -- `norm_num` works here
+    ... = (2 * m +1) % 2 : by congr'
+    ... = 2 * m % 2 + 1 : by { rw ← mod_add_mod, norm_num} -- distributing `%`
+    ... = 1 : by { rw mul_mod_right, ring}, -- `norm_num` works here
+  by linarith,
 end
+
 /-
 As a last step on our law of the excluded middle tour, let's notice that, especially
 in pure logic exercises, it can sometimes be useful to use the
