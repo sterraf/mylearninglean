@@ -101,13 +101,21 @@ you can put your mouse cursor above the symbol and wait for one second.
 -- 0023
 example (f g : ℝ → ℝ) : even_fun f → even_fun (g ∘ f) :=
 begin
-  sorry
+  intro hf,
+  intro x,
+  calc 
+  (g ∘ f) (-x) = g (f (-x)) : rfl
+  ... = (g ∘ f) x : by rw hf,
 end
 
 -- 0024
 example (f g : ℝ → ℝ) : odd_fun f → odd_fun g →  odd_fun (g ∘ f) :=
 begin
-  sorry
+  intros hf hg,
+  intro x,
+  calc 
+  (g ∘ f) (-x) = g (f (-x)) : rfl
+  ... = - (g ∘ f) x : by rw [hf, hg],
 end
 
 /-
@@ -195,7 +203,9 @@ end
 -- 0025
 example (f g : ℝ → ℝ) (hf : non_decreasing f) (hg : non_increasing g) : non_increasing (g ∘ f) :=
 begin
-  sorry
+  intros x₁ x₂ h,
+  apply hg,
+  exact hf _ _ h,
 end
 
 /-
@@ -236,8 +246,14 @@ end
 -- 0026
 example (x y : ℝ) : x^2 = y^2 → x = y ∨ x = -y :=
 begin
-  sorry
+  intro hyp,
+  have H : (x - y)*(x + y) = 0 := by linarith,
+  rw mul_eq_zero at H,
+  cases H with hadd hsub,
+  left, linarith,
+  right, linarith,
 end
+
 
 /-
 In the next exercise, we can use:
@@ -247,7 +263,16 @@ In the next exercise, we can use:
 -- 0027
 example (f : ℝ → ℝ) : non_decreasing f ↔ ∀ x y, x < y → f x ≤ f y :=
 begin
-  sorry
+  split,
+  intros hf x y hxy,
+  apply hf, linarith,
+  intros h x y hxy,
+  have : x = y ∨ x < y := eq_or_lt_of_le hxy,
+  cases this with heq hlt,
+  apply le_of_eq,
+  congr, -- At first, I tried `tauto`; this one seems primitive
+  assumption,
+  apply h _ _ hlt,
 end
 
 /-
@@ -258,6 +283,18 @@ In the next exercise, we can use:
 -- 0028
 example (f : ℝ → ℝ) (h : non_decreasing f) (h' : ∀ x, f (f x) = x) : ∀ x, f x = x :=
 begin
-  sorry
+  intros x,
+  have : f x ≤ x ∨ x ≤ f x := by apply le_total,
+  cases this with fle fge,
+  have : x ≤ f x,
+  { calc
+    x   = f (f x) : by rw h'
+    ... ≤ f x : h _ _ fle, },
+  apply le_antisymm fle this,
+  have : f x ≤ x,
+  { calc
+    f x ≤ f (f x) : h _ _ fge
+    ... = x : by rw h', },
+  apply le_antisymm this fge,
 end
 

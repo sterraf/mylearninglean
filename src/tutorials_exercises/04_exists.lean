@@ -46,7 +46,11 @@ variables (a b c : ℤ)
 -- 0029
 example (h₁ : a ∣ b) (h₂ : b ∣ c) : a ∣ c :=
 begin
-  sorry
+  cases h₁ with k hk,
+  cases h₂ with l hl,
+  use k*l,
+  rw [hl,hk],
+  ring,
 end
 
 /-
@@ -65,6 +69,10 @@ It uses the anonymous constructor angle brackets syntax.
 example (h1 : a ∣ b) (h2 : a ∣ c) : a ∣ b+c :=
 begin
   rcases h1 with ⟨k, rfl⟩,
+  ---- Equivalent to:
+  -- cases h1 with k hRFL,
+  -- rw hRFL at *,
+  -- clear hRFL,
   rcases h2 with ⟨l, rfl⟩,
   use k+l,
   ring,
@@ -84,7 +92,11 @@ end
 -- 0030
 example : 0 ∣ a ↔ a = 0 :=
 begin
-  sorry
+  split,
+  rintros ⟨k,rfl⟩,
+  ring,
+  intro h,
+  rw h,
 end
 
 /-
@@ -103,7 +115,9 @@ variables (f g : ℝ → ℝ)
 -- 0031
 example (h : surjective (g ∘ f)) : surjective g :=
 begin
-  sorry
+  intro x,
+  rcases h x with ⟨y,rfl⟩,
+  use f y,
 end
 
 /- 
@@ -114,6 +128,9 @@ next exercise in four lines.
 -- 0032
 example (hf : surjective f) (hg : surjective g) : surjective (g ∘ f) :=
 begin
-  sorry
+  intro x,
+  rcases hg x with ⟨y,rfl⟩,
+  rcases hf y with ⟨z,rfl⟩,
+  use z,
 end
 

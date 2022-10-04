@@ -35,13 +35,19 @@ end
 -- 0001
 example (a b c : ℝ) : (c * b) * a = b * (a * c) :=
 begin
-  sorry
+  rw mul_comm,
+  rw ← mul_assoc,
+  rw mul_comm,
+  -- `finish,` -- slow
+  -- `ring,` -- Finish him!
 end
 
 -- 0002
 example (a b c : ℝ) : a * (b * c) = b * (a * c) :=
 begin
-  sorry
+  rw ← mul_assoc,
+  rw ← mul_assoc,
+  rw mul_comm a b,
 end
 
 /-
@@ -55,7 +61,7 @@ Try to figure out what happens.
 -- 0003
 example (a b c : ℝ) : a * (b * c) = b * (a * c) :=
 begin
-  sorry
+  sorry -- already did that
 end
 
 /-
@@ -86,7 +92,11 @@ And the next one can use:
 -- 0004
 example (a b c d : ℝ) (hyp : c = b*a - d) (hyp' : d = a*b) : c = 0 :=
 begin
-  sorry
+  rw hyp' at hyp,
+  rw mul_comm at hyp,
+  calc
+    c   = a*b - a*b : hyp
+    ... = 0 : sub_self (a*b),
 end
 
 /-
@@ -121,7 +131,12 @@ Let's return to the other example using this method.
 -- 0005
 example (a b c d : ℝ) (hyp : c = b*a - d) (hyp' : d = a*b) : c = 0 :=
 begin
-  sorry
+  calc
+  c   = b*a - d : hyp
+  ... = b*a - a*b : by { rw hyp' }
+  -- ... = a*b - a*b : by { rw mul_comm }
+  -- ... = 0 : sub_self (a*b), -- Tada!
+  ... = 0 : by { rw mul_comm, exact sub_self (a*b)},
 end
 
 /-
@@ -148,7 +163,7 @@ Of course we can use `ring` outside of `calc`. Let's do the next one in one line
 -- 0006
 example (a b c : ℝ) : a * (b * c) = b * (a * c) :=
 begin
-  sorry
+  by ring,
 end
 
 /-
@@ -156,10 +171,7 @@ This is too much fun. Let's do it again.
 -/
 
 -- 0007
-example (a b : ℝ) : (a + b) + a = 2*a + b :=
-begin
-  sorry
-end
+example (a b : ℝ) : (a + b) + a = 2*a + b := by ring
 
 /-
 Maybe this is cheating. Let's try to do the next computation without ring.
@@ -175,7 +187,12 @@ add_zero a : a + 0 = a
 -- 0008
 example (a b : ℝ) : (a + b)*(a - b) = a^2 - b^2 :=
 begin
-  sorry
+  calc
+  (a + b)*(a - b) = (a + b)*a - (a + b)*b : by rw mul_sub
+  ...             = a*a + b*a - a*b - b*b : by { repeat {rw add_mul}, rw sub_sub }
+  ...             = a^2 + b*a - a*b - b^2 : by { repeat {rw pow_two }}
+  ...             = a^2 - b^2 : by { rw mul_comm, rw ← add_sub, 
+  rw sub_self, rw add_zero },
 end
 
 /- Let's stick to ring in the end. -/

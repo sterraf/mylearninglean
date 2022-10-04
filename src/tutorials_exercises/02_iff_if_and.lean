@@ -42,7 +42,12 @@ Let's prove a variation (without invoking commutativity of addition since this w
 -- 0009
 example {a b : ℝ} (hab : a ≤ b) (c : ℝ) : a + c ≤ b + c :=
 begin
-  sorry
+  -- `linarith,` -- Finish him!
+  suffices : (b + c) - (a + c) = b - a,
+  { rw ← sub_nonneg,
+  rw this,
+  apply sub_nonneg.2 hab },
+  ring,
 end
 
 
@@ -112,7 +117,10 @@ the pieces.
 -- 0011
 example (a b : ℝ) (ha : 0 ≤ a) (hb : 0 ≤ b) : 0 ≤ a + b :=
 begin
-  sorry
+  calc
+  0   ≤ 0 : le_refl 0
+  ... ≤ a : ha
+  ... ≤ a + b : le_add_of_nonneg_right hb,
 end
 
 /- And let's combine with our earlier lemmas. -/
@@ -278,7 +286,8 @@ Let's practise using `intros`. -/
 -- 0016
 example (a b : ℝ): 0 ≤ b → a ≤ a + b :=
 begin
-  sorry
+  intros hb,
+  exact le_add_of_nonneg_right hb,
 end
 
 
@@ -334,8 +343,14 @@ unspecified mathematical statements.
 -- 0017
 example (P Q R : Prop) : P ∧ Q → Q ∧ P :=
 begin
-  sorry
+  intros hpq,
+  -- exact ⟨hpq.2, hpq.1⟩, -- Finish him!
+  cases hpq,
+  split,
+  exacts [hpq_right, hpq_left],
 end
+
+example (P Q R : Prop) : P ∧ Q → Q ∧ P := λhpq, ⟨hpq.2, hpq.1⟩
 
 /-
 Of course using `split` only to be able to use `exact` twice in a row feels silly. One can
@@ -367,7 +382,8 @@ Now redo the previous exercise using all those compressing techniques, in exactl
 -- 0018
 example (P Q R : Prop): P ∧ Q → Q ∧ P :=
 begin
-  sorry
+  rintros ⟨h₁, h₂⟩,
+  exact ⟨h₂, h₁⟩,
 end
 
 /-
@@ -379,8 +395,14 @@ an equivalence into two implications.
 -- 0019
 example (P Q R : Prop) : (P ∧ Q → R) ↔ (P → (Q → R)) :=
 begin
-  sorry
+  split,
+  { exact λpqr p q, pqr ⟨p,q⟩ },
+  { exact λpqr pq, pqr pq.left pq.right }
 end
+
+-- One-liner
+example (P Q R : Prop) : (P ∧ Q → R) ↔ (P → (Q → R)) :=
+⟨ λpqr p q, pqr ⟨p,q⟩, λpqr pq, pqr pq.left pq.right ⟩
 
 /-
 If you used more than five lines in the above exercise then try to compress things
@@ -412,7 +434,7 @@ Now let's enjoy this for a while.
 -- 0020
 example (a b : ℝ) (ha : 0 ≤ a) (hb : 0 ≤ b) : 0 ≤ a + b :=
 begin
-  sorry
+  linarith,
 end
 
 /- And let's combine with our earlier lemmas. -/
@@ -420,7 +442,7 @@ end
 -- 0021
 example (a b c d : ℝ) (hab : a ≤ b) (hcd : c ≤ d) : a + c ≤ b + d :=
 begin
-  sorry
+  linarith,
 end
 
 
@@ -447,6 +469,17 @@ open nat
 -- 0022
 example (a b : ℕ) : a ∣ b ↔ gcd a b = a :=
 begin
-  sorry
+  split,
+  { intro hab,
+    apply dvd_antisymm,
+    swap,
+    apply dvd_gcd_iff.2 ⟨dvd_refl _, _⟩,
+    assumption,
+    have hdv : gcd a b ∣ a ∧ gcd a b ∣ b := dvd_gcd_iff.1 (dvd_refl $ gcd a b),
+    exact hdv.left},
+  intro hab,
+  have hdv : a ∣ gcd a b → a ∣ a ∧ a ∣ b := dvd_gcd_iff.1,
+  rw hab at hdv,
+  exact (hdv (dvd_refl a)).right,
 end
 
