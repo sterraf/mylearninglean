@@ -85,7 +85,23 @@ def tendsto_infinity (u : ℕ → ℝ) := ∀ A, ∃ N, ∀ n ≥ N, u n ≥ A
 -- 0066
 example {u : ℕ → ℝ} : tendsto_infinity u → ∀ l, ¬ seq_limit u l :=
 begin
-  sorry
+  intros u_inf l,
+  unfold seq_limit,
+  push_neg,
+  use (1:ℝ),
+  norm_num, -- I don't need to split! Before, I had `split,linarith`
+  intro N,
+  specialize u_inf (l+2),
+  cases u_inf with M HM,
+  let Max := max M N,
+  use Max,
+  specialize HM Max (by norm_num),
+  norm_num,
+  calc
+  1   < 2           : by linarith
+  ... ≤ u Max - l   : by linarith
+  ... = |u Max - l| : by { rw abs_eq_self.2, linarith },
+  -- `rw` will put assumptions in as the new targets
 end
 
 def nondecreasing_seq (u : ℕ → ℝ) := ∀ n m, n ≤ m → u n ≤ u m
