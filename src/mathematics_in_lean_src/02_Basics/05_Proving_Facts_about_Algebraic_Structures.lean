@@ -111,8 +111,7 @@ begin
   0   = dist x x            : by rw dist_self
   ... ≤ dist x y + dist y x : dist_triangle x y x
   ... ≤ dist x y * 2        : by {rw dist_comm, ring},
-  apply nonneg_of_mul_nonneg_left this,
-  linarith,
+  linarith [nonneg_of_mul_nonneg_left this],
   end
 
 end
