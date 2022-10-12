@@ -33,7 +33,18 @@ variables x y z : α
 #check (le_sup_right: y ≤ x ⊔ y)
 #check (sup_le : x ≤ z → y ≤ z → x ⊔ y ≤ z)
 
-example : x ⊓ y = y ⊓ x := sorry
+example : x ⊓ y = y ⊓ x :=
+begin
+  apply le_antisymm,
+  -- The original example (and solution) uses `repeat`
+  apply le_inf,
+  exact inf_le_right,
+  exact inf_le_left,
+  apply le_inf,
+  exact inf_le_right,
+  exact inf_le_left,
+end
+
 example : x ⊓ y ⊓ z = x ⊓ (y ⊓ z) := sorry
 example : x ⊔ y = y ⊔ x := sorry
 example : x ⊔ y ⊔ z = x ⊔ (y ⊔ z) := sorry
@@ -93,7 +104,16 @@ variables x y z : X
 #check (dist_comm x y : dist x y = dist y x)
 #check (dist_triangle x y z : dist x z ≤ dist x y + dist y z)
 
-example (x y : X) : 0 ≤ dist x y := sorry
+example (x y : X) : 0 ≤ dist x y :=
+begin
+  have : 0 ≤ dist x y * 2,
+  calc
+  0   = dist x x            : by rw dist_self
+  ... ≤ dist x y + dist y x : dist_triangle x y x
+  ... ≤ dist x y * 2        : by {rw dist_comm, ring},
+  apply nonneg_of_mul_nonneg_left this,
+  linarith,
+  end
 
 end
 
