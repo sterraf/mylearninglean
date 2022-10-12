@@ -116,7 +116,12 @@ namespace my_ring
 variables {R : Type*} [ring R]
 
 theorem self_sub (a : R) : a - a = 0 :=
-sorry
+begin
+  rw [sub_eq_add_neg, add_right_neg],
+end
+
+-- Next one works by the definition of subtraction in `ℝ`
+theorem self_sub' (a : ℝ) : a - a = 0 := add_right_neg a
 
 lemma one_add_one_eq_two : 1 + 1 = (2 : R) :=
 by refl
