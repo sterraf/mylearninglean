@@ -66,11 +66,30 @@ end
 
 example (hfa : fn_lb f a) (hgb : fn_lb g b) :
   fn_lb (λ x, f x + g x) (a + b) :=
-sorry
+begin
+  intros x,
+  change a + b ≤ f x + g x,
+  /-
+  Need partial applications next, otherwise it won't unfold `fn_lb`. Without them, it fails.
+  `apply` also does that job.
+  -/
+  exact add_le_add (hfa _) (hgb _),
+end
 
 example (nnf : fn_lb f 0) (nng : fn_lb g 0) :
   fn_lb (λ x, f x * g x) 0 :=
-sorry
+begin
+  -- A declarative try
+  intro x,
+  suffices : 0 ≤ f x * g x,
+  assumption, -- neither `linarith` nor `norm_num`, but `exact this` works
+  have nnfx: 0 ≤ f x := nnf x,
+  have nngx: 0 ≤ g x := nng x,
+  calc
+  0   = 0 * 0     : by norm_num
+  ... ≤ f x * 0   : by { linarith }
+  ... ≤ f x * g x : mul_le_mul_of_nonneg_left nngx nnfx
+end
 
 example (hfa : fn_ub f a) (hfb : fn_ub g b)
     (nng : fn_lb g 0) (nna : 0 ≤ a) :
@@ -150,7 +169,10 @@ by { intros x xs, exact xs }
 theorem subset.refl : s ⊆ s := λ x xs, xs
 
 theorem subset.trans : r ⊆ s → s ⊆ t → r ⊆ t :=
-sorry
+begin
+  intros rs st x xinr,
+  exact st (rs xinr),
+end
 
 end
 
@@ -176,13 +198,34 @@ begin
 end
 
 example {c : ℝ} (h : c ≠ 0) : injective (λ x, c * x) :=
-sorry
+begin
+  intros x y h',
+  dsimp at h',
+  calc
+  x   = c⁻¹ * (c * x)  : (eq_inv_mul_iff_mul_eq₀ h).mpr rfl
+  -- `library_search` said it
+  ... = c⁻¹ * (c * y)  : by congr' -- depth 1
+  ... = y              : by rw ← (eq_inv_mul_iff_mul_eq₀ h).mpr rfl
+  /-
+  The official solution involved the instance `cancel_monoid_with_zero`,
+  instead of something about groups as above
+  -/
+end
 
 variables {α : Type*} {β : Type*} {γ : Type*}
 variables {g : β → γ} {f : α → β}
 
 example (injg : injective g) (injf : injective f) :
   injective (λ x, g (f x)) :=
-sorry
+/-
+-- long proof
+begin
+  intros x y h,
+  apply injf,
+  apply injg,
+  exact h,
+end
+-/
+λ x y h, injf (injg h) -- long-sought proof term
 
 end
