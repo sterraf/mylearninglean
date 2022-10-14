@@ -144,6 +144,11 @@ variables {g : β → γ} {f : α → β}
 
 example (surjg : surjective g) (surjf : surjective f) :
   surjective (λ x, g (f x)) :=
-sorry
+begin
+  intro x,
+  rcases surjg x with ⟨w,rfl⟩,
+  rcases surjf w with ⟨v,rfl⟩,
+  use v,
+end
 
 end
