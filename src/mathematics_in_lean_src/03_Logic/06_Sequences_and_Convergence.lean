@@ -119,7 +119,7 @@ theorem converges_to_unique {s : ℕ → ℝ} {a b : ℝ}
 begin
   by_contradiction abne,
   have : abs (a - b) > 0,
-  { sorry },
+  { apply lt_abs.mpr, norm_num, tauto},
   let ε := abs (a - b) / 2,
   have εpos : ε > 0,
   { change abs (a - b) / 2 > 0, linarith },
@@ -127,11 +127,17 @@ begin
   cases sb ε εpos with Nb hNb,
   let N := max Na Nb,
   have absa : abs (s N - a) < ε,
-  { sorry },
+  { exact hNa N (le_max_left Na Nb) },
   have absb : abs (s N - b) < ε,
-  { sorry },
+  { exact hNb N (le_max_right Na Nb) },
   have : abs (a - b) < abs (a - b),
-  { sorry },
+  {
+    calc
+    |a - b| = |(s N - b) - (s N - a)| : by ring
+    ...     ≤ |s N - b| + |s N - a|   : by { apply abs_sub,}
+    ...     < ε + ε   : by linarith
+    ...     = |a - b| : by norm_num,
+   },
   exact lt_irrefl _ this
 end
 
