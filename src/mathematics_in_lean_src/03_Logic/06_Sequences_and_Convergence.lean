@@ -34,7 +34,17 @@ begin
   cases cs (ε / 2) ε2pos with Ns hs,
   cases ct (ε / 2) ε2pos with Nt ht,
   use max Ns Nt,
-  sorry
+  intros n hM,
+  have h_ex1 : |s n - a| < ε / 2,
+  { exact hs n (by linarith [le_max_left Ns Nt]) },
+  -- `linarith` does require both arguments `Ns` and `Nt`
+  have h_ex2 : |t n - b| < ε / 2,
+  { exact ht n (by linarith [le_max_right Ns Nt]) },
+  calc
+    |s n + t n - (a + b)| = |s n - a + (t n - b)| : by ring
+    ...      ≤ |s n - a| + |t n - b| : abs_add _ _
+    ...      < ε/2 + ε/2 : by { linarith }
+    ...      = ε : by ring,
 end
 
 theorem converges_to_mul_const {s : ℕ → ℝ} {a : ℝ}
@@ -47,7 +57,24 @@ begin
     rw [h, zero_mul] },
   have acpos : 0 < abs c,
     from abs_pos.mpr h,
-  sorry
+  intros ε ε_pos, dsimp,
+  have εcpos : 0 < ε / |c|,
+  { exact div_pos ε_pos acpos},
+  cases cs (ε / |c|) εcpos with Ns hs,
+  use Ns,
+  intros n hn,
+  have : |c| * (ε / |c|) = ε,
+  -- Next two goals solved in a horribly convoluted way
+  { calc
+    |c| * (ε / |c|)  = |c| * |c|⁻¹ * ε :  by ring
+    ... =  ε : by { rw mul_inv_cancel, norm_num, linarith} },
+  calc
+  |c * s n - c * a| = |c| * |s n - a| : by rw [← mul_sub, abs_mul]
+  ...               < ε                :
+  begin
+    convert @mul_lt_mul' ℝ (by apply_instance) (|c|) _ (|c|) (ε / |c|) _ _ _ _ ;
+    linarith [hs n hn, abs_nonneg (s n - a)]
+  end
 end
 
 theorem exists_abs_le_of_converges_to {s : ℕ → ℝ} {a : ℝ}
