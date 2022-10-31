@@ -1,5 +1,6 @@
 import data.nat.prime
 import data.real.basic
+import topology.basic -- for namespace fiddling
 
 /-
   Some experiments based on LFTCM20
@@ -96,3 +97,12 @@ begin
   intro alp,
   apply h alp trivial,
 end
+
+-- Experimenting with namespaces and `_root_`.
+namespace is_open
+
+#check and                -- topology lemma
+#check _root_.is_open.and -- same as above
+#check _root_.and         -- logical `and` at the root namespace
+
+end is_open
