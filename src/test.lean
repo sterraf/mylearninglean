@@ -86,3 +86,13 @@ example (P R : Prop) (p: P) (q: ¬P) : R := absurd p q
 
 example (P R : Prop) (p: P) (q: ¬P) : R := false.rec R (q p)
 
+-- Playing around classically. 
+lemma exists_of_nonempty {α : Type}  [nonempty α] : (∃ x : α, true) :=
+begin
+  by_contradiction,
+  push_neg at h,
+  apply nonempty.elim, 
+  assumption,
+  intro alp,
+  apply h alp trivial,
+end
