@@ -106,3 +106,11 @@ namespace is_open
 #check _root_.and         -- logical `and` at the root namespace
 
 end is_open
+
+-- Example using `constructor`
+example {α : Type*} (P Q : α → Prop) : (∀ x, P x ∧ Q x) → (∀x, P x ∨ Q x) :=
+begin
+  intros h x,
+  constructor, -- Chooses the lhs, first constructor that matches.
+  exact (h x).left
+end
