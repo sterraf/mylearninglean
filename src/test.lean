@@ -114,3 +114,38 @@ begin
   constructor, -- Chooses the lhs, first constructor that matches.
   exact (h x).left
 end
+
+section including_omitting
+
+class cls := (val : ℕ) -- From the Reference Manual, Sect. 3.2
+
+variables (x : ℝ) [c : cls]
+
+def ex2b : ℕ := 5
+
+#check ex2b       -- ex2b : ℕ
+#check @ex2b      -- ex2b : ℕ
+
+include c
+
+def ex2c : ℕ := 5
+
+#check ex2c       -- ex2c : ℕ
+#check @ex2c      -- ex2c : Π [c : cls], ℕ
+
+example : ex2c = (5 : ℕ) := rfl -- Here the `5` is just natural
+
+omit c
+include x
+
+def ex2d : ℕ := 5
+
+#check ex2d       -- ex2d : ℝ → ℕ
+#check @ex2d      -- ex2d : ℝ → ℕ
+
+example : ex2d = (5 : ℕ) := rfl -- Here the `5` is coerced to `ℝ → ℕ` 
+
+end including_omitting
+
+example : ex2d = (5 : ℕ) := rfl -- Here too
+
