@@ -54,20 +54,12 @@ begin
   apply subset_union_of_subset_right,
   intros x hx,
   apply mem_range.mpr,
-  have : x ∈ ⋃ j : Iio k, (sigma0_pi0_rec s j.1).snd,
+  have hx : x ∈ ⋃ j : Iio k, (sigma0_pi0_rec s j.1).snd,
   { simp,
     use i,
     exact ⟨hik,hx⟩ },
-  existsi (λn : ℕ, ↑x),
-  { simp, ext z, simp,
-    split,
-    { intro hz1,
-      cases hz1 with i hz,
-      sorry },
-    { intro hx,
-      use 0,
-      sorry } },
-  sorry
+  existsi (λn : ℕ, (⟨x,hx⟩ : ⋃ j : Iio k, (sigma0_pi0_rec s j.1).snd)),
+  exact Union_const x,
 end
 
 theorem self_subset_sigma0 (s : set (set α)) (i : ω₁) :
