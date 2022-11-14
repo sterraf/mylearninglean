@@ -17,6 +17,14 @@ begin
   simp,
 end
 
+-- Overly simplified version that works, no coercions are needed
+example : ∃ (f : ℕ → set β), (⋃ (n : ℕ), (f n)) = y :=
+begin
+  simp,
+  existsi (λn : ℕ, y),
+  ext, simp
+end
+
 end coercions
 
 section intervals
