@@ -10,11 +10,12 @@ variables (α β: Type*) (y : set β) (z : set (set β))
 example (b : α) : y = ⋃ j : α, y := by { ext, simp, tauto }
 
 -- Simplified version of the problem below
-example (y ∈ z) : ∃ (f : ℕ → z), (⋃ (n : ℕ), (f n).val) = y :=
+example (hy : y ∈ z) : ∃ (f : ℕ → z), (⋃ (n : ℕ), (f n).val) = y :=
+-- Without the `hy :`, it means `(y : _) (H : y ∈ z)`
 begin
   simp,
-  existsi (λn : ℕ, ↑y),
-  simp,
+  existsi (λn : ℕ, (⟨y,hy⟩:z)), -- giving info to lift `y` to `z`
+  exact Union_const y,
 end
 
 -- Overly simplified version that works, no coercions are needed
