@@ -54,15 +54,11 @@ end
 example : (⋃ j : Iio a, x j) = (⋃ j : Iio a, x j.1) := by simp -- `.1` is `.val` in this context
 example : (⋃ j < a, x j) = (⋃ j : Iio a, x j.1) := by simp -- same as above.
 
--- The original problem
-example (y ∈ ⋃ j : Iio a, x j) : ∃ (f : ℕ → ⋃ j : Iio a, x j), (⋃ (n : ℕ), (f n).val) = y :=
+-- The original problem, now solved
+example (hy: y ∈ ⋃ j : Iio a, x j) : ∃ (f : ℕ → ⋃ j : Iio a, x j), (⋃ (n : ℕ), (f n).val) = y :=
 begin
-  simp,
-  existsi (λn : ℕ, ↑y);
-  sorry
+  existsi (λn : ℕ, (⟨y,hy⟩: ⋃ j : Iio a, x j)),
+  exact Union_const y
 end
-
--- Simplified version of the problem
-example (x : α → set (set β)) (y ∈ ⋃ j, x j) : ∃ (f : ℕ → ⋃ j, x j), (⋃ (n : ℕ), (f n).val) = y := sorry
 
 end intervals
