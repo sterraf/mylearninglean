@@ -1,14 +1,16 @@
 import tactic
-import data.set.intervals
+import data.set.intervals -- just `data.set` for the MWE
 
 open set
 
 section coercions
 
-variables (α β: Type*) (x : α → set (set β)) (y : set β)
+variables (α β: Type*) (y : set β) (z : set (set β))
+
+example (b : α) : y = ⋃ j : α, y := by { ext, simp, tauto }
 
 -- Simplified version of the problem below
-example (y ∈ ⋃ j, x j) : ∃ (f : ℕ → ⋃ j, x j), (⋃ (n : ℕ), (f n).val) = y :=
+example (y ∈ z) : ∃ (f : ℕ → z), (⋃ (n : ℕ), (f n).val) = y :=
 begin
   simp,
   existsi (λn : ℕ, ↑y),
@@ -47,8 +49,11 @@ example : (⋃ j < a, x j) = (⋃ j : Iio a, x j.1) := by simp -- same as above.
 example (y ∈ ⋃ j : Iio a, x j) : ∃ (f : ℕ → ⋃ j : Iio a, x j), (⋃ (n : ℕ), (f n).val) = y :=
 begin
   simp,
-  existsi (λn : ℕ, ↑y),
-  simp,
+  existsi (λn : ℕ, ↑y);
+  sorry
 end
+
+-- Simplified version of the problem
+example (x : α → set (set β)) (y ∈ ⋃ j, x j) : ∃ (f : ℕ → ⋃ j, x j), (⋃ (n : ℕ), (f n).val) = y := sorry
 
 end intervals
