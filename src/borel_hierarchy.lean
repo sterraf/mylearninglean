@@ -90,6 +90,30 @@ end
 theorem univ_mem_pi0 (i : ω₁) :
 set.univ ∈ pi0 s i := by { unfold pi0 sigma0_pi0_rec, simp }
 
+
+-- Experimenting with a fragment of the code provided by Junyan Xu
+inductive gen_from (s : set (set α)) : ordinal.{u} → set α → Prop 
+| basic : ∀ o (u ∈ s), gen_from o u
+| empty : ∀ o, gen_from o ∅
+
+#check gen_from.rec
+def gen_from_set (s : set (set α)) : ordinal.{u} → set (set α) := gen_from s
+
+example : gen_from_set s 0 = s ∪ {∅}:=
+begin
+  unfold gen_from_set,
+  ext, split;
+  intro hx,
+  { cases hx,
+    { exact mem_union_left _ hx_H },
+    { finish} },
+  { cases hx,
+    { exact gen_from.basic 0 x hx }, -- There should be a better inductive way
+    { simp at hx,
+      rw hx,
+      exact gen_from.empty 0 } } -- than using this `exact`s 
+end
+
 end rec_gen
 
 end basic_pointclasses
