@@ -198,8 +198,5 @@ lemma generate_from_induction (s : set (set α)) (P : set α → Prop) (i : ordi
 (h_union : ∀ (f : ℕ → set α), (∀ n, P (f n)) → P (⋃ i, f i)) (hsox: generate_from s i x) : P x :=
 begin
   induction hsox with o y hxins o' o y o' ho'o gensx IH o f h hnlto genhf IH,
-  { exact h_basic y hxins },
-  { exact h_empty },
-  { exact h_compl y IH },
-  { apply h_union f IH }
+  exacts [h_basic y hxins, h_empty, h_compl y IH, h_union f IH]
 end
