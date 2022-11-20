@@ -4,14 +4,12 @@ import set_theory.cardinal.ordinal
 open measurable_space
 open ordinal cardinal set
 
+universe u 
+variables {α : Type u} (s : set (set α))
+
 namespace basic_pointclasses
 
 section rec_gen
-
-universe u 
-parameter (X : Type*)
-variable (g : set (set X))
-variables {α : Type u} (s : set (set α))
 
 @[reducible]
 noncomputable def ordω₁ := (aleph 1 : cardinal.{u}).ord
@@ -90,6 +88,74 @@ end
 theorem univ_mem_pi0 (i : ω₁) :
 set.univ ∈ pi0 s i := by { unfold pi0 sigma0_pi0_rec, simp }
 
+end rec_gen
+
+end basic_pointclasses
+
+namespace pointclasses
+
+/--
+Same as `basic_pointclasses.sigma0_pi0_rec`, but using plain ordinals.
+-/
+@[protected]
+def sigma0_pi0_rec : ordinal.{u} → set (set α) × set (set α)
+| i :=
+  let 
+    P_old := ⋃ j (hij : j < i), (sigma0_pi0_rec j).snd,
+    S := s ∪ {∅} ∪  set.range (λ (f : ℕ → P_old), ⋃ n, (f n).1),
+    P := compl '' S
+  in
+    ⟨S , P⟩
+using_well_founded {dec_tac := `[exact hij]}
+
+def sigma0 (i : ordinal.{u}) : set (set α) := (sigma0_pi0_rec s i).fst
+
+def pi0 (i : ordinal.{u}) : set (set α) := (sigma0_pi0_rec s i).snd
+
+theorem sigma0_pi0_rec_def' (i : ordinal.{u}) : sigma0_pi0_rec s i = ⟨sigma0 s i, pi0 s i⟩ := by { unfold pi0 sigma0, simp }
+
+theorem pi0_sub_sigma0 (i k : ordinal.{u}) (hik : i < k) : pi0 s i ⊆ sigma0 s k :=
+begin
+  unfold sigma0 sigma0_pi0_rec,
+  apply subset_union_of_subset_right,
+  intros x hx,
+  apply mem_range.mpr,
+  have hx : x ∈ ⋃ j < k, (sigma0_pi0_rec s j).snd,
+  { simp,
+    use i,
+    exact ⟨hik,hx⟩ },
+  existsi (λn : ℕ, (⟨x,hx⟩ : ⋃ j < k, (sigma0_pi0_rec s j).snd)),
+  exact Union_const x,
+end
+
+theorem self_subset_sigma0 (i : ordinal.{u}) :
+  s ⊆ sigma0 s i :=
+begin
+  unfold sigma0 sigma0_pi0_rec,
+  apply_rules [subset_union_of_subset_left],
+  exact subset_rfl
+end
+
+theorem compl_self_subset_pi0 (i : ordinal.{u}) :
+  compl '' s ⊆ pi0 s i :=
+begin
+  unfold pi0 sigma0_pi0_rec, simp only,
+  rw [image_union,image_union],
+  apply_rules [subset_union_of_subset_left],
+  exact subset_rfl
+end
+
+theorem empty_mem_sigma0 (i : ordinal.{u}) :
+  ∅ ∈ sigma0 s i :=
+begin
+  unfold sigma0 sigma0_pi0_rec, simp only,
+  exact mem_union_left _ (mem_union_right _ (mem_singleton ∅))
+end
+
+theorem univ_mem_pi0 (i : ordinal.{u}) :
+set.univ ∈ pi0 s i := by { unfold pi0 sigma0_pi0_rec, simp }
+
+end pointclasses
 
 -- Experimenting with a fragment of the code provided by Junyan Xu
 inductive gen_from (s : set (set α)) : ordinal.{u} → set α → Prop 
@@ -113,7 +179,3 @@ begin
       rw hx,
       exact gen_from.empty 0 } } -- than using this `exact`s 
 end
-
-end rec_gen
-
-end basic_pointclasses
