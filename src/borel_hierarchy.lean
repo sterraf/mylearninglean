@@ -46,7 +46,7 @@ def pi0 (i : ω₁) : set (set α) := (sigma0_pi0_rec s i).snd
 
 theorem sigma0_pi0_rec_def' (i : ω₁) : sigma0_pi0_rec s i = ⟨sigma0 s i, pi0 s i⟩ := by { unfold pi0 sigma0, simp }
 
-theorem pi0_sub_sigma0 (i k : ω₁) (hik : i < k) : pi0 s i ⊆ sigma0 s k :=
+theorem pi0_subset_sigma0 (i k : ω₁) (hik : i < k) : pi0 s i ⊆ sigma0 s k :=
 begin
   have : i ∈ Iio k := by simp [hik],
   unfold sigma0 sigma0_pi0_rec,
@@ -114,19 +114,26 @@ def pi0 (i : ordinal.{u}) : set (set α) := (sigma0_pi0_rec s i).snd
 
 theorem sigma0_pi0_rec_def' (i : ordinal.{u}) : sigma0_pi0_rec s i = ⟨sigma0 s i, pi0 s i⟩ := by { unfold pi0 sigma0, simp }
 
-theorem pi0_sub_sigma0 (i k : ordinal.{u}) (hik : i < k) : pi0 s i ⊆ sigma0 s k :=
+theorem sigma0_eq_Union_pi0 (i : ordinal.{u}) :
+sigma0 s i =  s ∪ {∅} ∪  set.range (λ (f : ℕ → ⋃ j (hij : j < i), pi0 s j), ⋃ n, (f n).1) :=
+by { unfold sigma0 sigma0_pi0_rec, simp, congr }
+
+theorem pi0_subset_sigma0 (i k : ordinal.{u}) (hik : i < k) : pi0 s i ⊆ sigma0 s k :=
 begin
-  unfold sigma0 sigma0_pi0_rec,
+  simp only [sigma0_eq_Union_pi0,hik],
   apply subset_union_of_subset_right,
   intros x hx,
   apply mem_range.mpr,
-  have hx : x ∈ ⋃ j < k, (sigma0_pi0_rec s j).snd,
+  have hxU : x ∈ ⋃ j < k, pi0 s j,
   { simp,
     use i,
     exact ⟨hik,hx⟩ },
-  existsi (λn : ℕ, (⟨x,hx⟩ : ⋃ j < k, (sigma0_pi0_rec s j).snd)),
-  exact Union_const x,
+  existsi (λn : ℕ, (⟨x,hxU⟩ : ⋃ (j : ordinal) (hij : j < k), pi0 s j)),
+  exact Union_const x
 end
+
+theorem pi0_eq_compl_sigma0 (i : ordinal.{u}): pi0 s i = compl '' sigma0 s i :=
+by { unfold sigma0 pi0 sigma0_pi0_rec }
 
 theorem self_subset_sigma0 (i : ordinal.{u}) :
   s ⊆ sigma0 s i :=
@@ -153,7 +160,43 @@ begin
 end
 
 theorem univ_mem_pi0 (i : ordinal.{u}) :
-set.univ ∈ pi0 s i := by { unfold pi0 sigma0_pi0_rec, simp }
+set.univ ∈ pi0 s i := by { simp [pi0_eq_compl_sigma0,empty_mem_sigma0] }
+
+theorem sigma0_subset_sigma0 (i k : ordinal.{u}) (hik : i ≤ k) : sigma0 s i ⊆ sigma0 s k :=
+begin
+  rw le_iff_lt_or_eq at hik,
+  cases hik,
+  -- Take care of the trivial case `i = k` first,
+  swap,
+  { simp [hik, subset_rfl] },
+  -- Now the interesting `i < k`:
+  repeat { rw sigma0_eq_Union_pi0 },
+  apply union_subset_union,
+  { exact subset_refl _ },
+  intros x hx,
+  cases hx with f hf,
+  simp only at hf,
+  have hfUn : ∀ (n : ℕ), ↑(f n) ∈ (⋃ j (H :j < k), pi0 s j),
+  { intro n,
+    apply mem_Union.mpr,
+    -- Awful proof ahead :(
+    have : ∃ j (hjk : j < k), (f n).val ∈ pi0 s j :=
+      (let (Exists.intro j q) := (mem_Union.mp (f n).property) in
+        let (Exists.intro l r) := mem_Union.mp q in
+        Exists.intro j (Exists.intro (trans l hik) r)),
+    cases this with j hj,
+    use j,
+    finish },
+  apply mem_range.mpr,
+  existsi (λn : ℕ, (⟨f n, hfUn n⟩ : ⋃ j < k, (pi0 s j))),
+  tauto,
+end
+
+theorem pi0_subset_pi0 (i k : ordinal.{u}) (hik : i ≤ k) : pi0 s i ⊆ pi0 s k :=
+begin
+  rw [pi0_eq_compl_sigma0,pi0_eq_compl_sigma0],
+  exact image_subset _ (sigma0_subset_sigma0 s i k hik)
+end
 
 end pointclasses
 
