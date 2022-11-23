@@ -176,7 +176,7 @@ begin
   intros x hx,
   cases hx with f hf,
   simp only at hf,
-  have hfUn : ∀ (n : ℕ), ↑(f n) ∈ (⋃ j (H :j < k), pi0 s j),
+  have hfUn : ∀ (n : ℕ), ↑(f n) ∈ (⋃ j < k, pi0 s j),
   { intro n,
     apply mem_Union.mpr,
     -- Awful proof ahead :(
@@ -186,7 +186,7 @@ begin
         Exists.intro j (Exists.intro (trans l hik) r)),
     cases this with j hj,
     use j,
-    finish },
+    exact mem_Union.mpr hj },
   apply mem_range.mpr,
   existsi (λn : ℕ, (⟨f n, hfUn n⟩ : ⋃ j < k, (pi0 s j))),
   tauto,
