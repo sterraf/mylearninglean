@@ -30,10 +30,28 @@ variables {α : Type u}
 open_locale cardinal
 open cardinal set
 
+local notation `ω₁` := (aleph 1 : cardinal.{u}).ord.out.α
+
+namespace ordinal
+
 @[reducible]
 noncomputable def ordω₁ := (aleph 1 : cardinal.{u}).ord
 
-local notation `ω₁` := (aleph 1 : cardinal.{u}).ord.out.α
+local notation `<ω₁` := ordω₁.out.r
+local notation `woω₁` := ordω₁.out.wo
+
+lemma zero_lt_aleph_1_ord : 0 < ordω₁ := ordinal.pos_iff_ne_zero.mpr (aleph 1).ord.ne_zero_of_out_nonempty
+
+lemma type_out_r (a : ordinal): type a.out.r = a :=
+type_lt a
+
+noncomputable def minω₁ : ω₁ :=  @enum ω₁ <ω₁ woω₁ 0
+  (by { simp only [type_out_r, zero_lt_aleph_1_ord] })
+
+lemma not_lt_min_omega1 (i : ω₁) : ¬(i < minω₁) :=
+ not_lt_of_le (enum_zero_le' zero_lt_aleph_1_ord i)
+
+end ordinal
 
 namespace measurable_space
 
@@ -129,7 +147,7 @@ begin
 end
 
 /-- `generate_measurable_rec s` generates precisely the smallest sigma-algebra containing `s`. -/
-theorem generate_measurable_eq_rec' (s : set (set α)) :
+theorem generate_measurable_eq_rec (s : set (set α)) :
   {t | generate_measurable s t} = ⋃ i, generate_measurable_rec s i :=
 begin
   ext t, refine ⟨λ ht, _, λ ht, _⟩,
