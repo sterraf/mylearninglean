@@ -44,9 +44,9 @@ def sigma0 (i : ω₁) : set (set α) := (sigma0_pi0_rec s i).fst
 
 def pi0 (i : ω₁) : set (set α) := (sigma0_pi0_rec s i).snd
 
-theorem sigma0_pi0_rec_def' (i : ω₁) : sigma0_pi0_rec s i = ⟨sigma0 s i, pi0 s i⟩ := by { unfold pi0 sigma0, simp }
+lemma sigma0_pi0_rec_def' (i : ω₁) : sigma0_pi0_rec s i = ⟨sigma0 s i, pi0 s i⟩ := by { unfold pi0 sigma0, simp }
 
-theorem pi0_subset_sigma0 (i k : ω₁) (hik : i < k) : pi0 s i ⊆ sigma0 s k :=
+lemma pi0_subset_sigma0 (i k : ω₁) (hik : i < k) : pi0 s i ⊆ sigma0 s k :=
 begin
   have : i ∈ Iio k := by simp [hik],
   unfold sigma0 sigma0_pi0_rec,
@@ -61,7 +61,7 @@ begin
   exact Union_const x,
 end
 
-theorem self_subset_sigma0 (i : ω₁) :
+lemma self_subset_sigma0 (i : ω₁) :
   s ⊆ sigma0 s i :=
 begin
   unfold sigma0 sigma0_pi0_rec,
@@ -69,7 +69,7 @@ begin
   exact subset_rfl
 end
 
-theorem compl_self_subset_pi0 (i : ω₁) :
+lemma compl_self_subset_pi0 (i : ω₁) :
   compl '' s ⊆ pi0 s i :=
 begin
   unfold pi0 sigma0_pi0_rec, simp only,
@@ -78,14 +78,14 @@ begin
   exact subset_rfl
 end
 
-theorem empty_mem_sigma0 (i : ω₁) :
+lemma empty_mem_sigma0 (i : ω₁) :
   ∅ ∈ sigma0 s i :=
 begin
   unfold sigma0 sigma0_pi0_rec, simp only,
   exact mem_union_left _ (mem_union_right _ (mem_singleton ∅))
 end
 
-theorem univ_mem_pi0 (i : ω₁) :
+lemma univ_mem_pi0 (i : ω₁) :
 set.univ ∈ pi0 s i := by { unfold pi0 sigma0_pi0_rec, simp }
 
 end rec_gen
@@ -94,19 +94,23 @@ end basic_pointclasses
 
 namespace pointclasses
 
-section sigma0_pi0_rec
-
-parameters {α : Type u} (s : set (set α))
-variables (i k : ordinal.{u})
-
 /--
 The first uncountable ordinal in type universe `u`.
 -/
 @[reducible]
 noncomputable def ω₁ := (aleph 1 : cardinal.{u}).ord
 
+section sigma0_pi0_rec
+
+parameters {α : Type u} (s : set (set α))
+variables (i k : ordinal.{u})
+
 /--
-Simultaneous recursive definition of Σ⁰ᵢ and Π⁰ᵢ pointclasses by recursion on ordinals.
+Simultaneous recursive definition of Σ⁰ᵢ and Π⁰ᵢ pointclasses by recursion
+on ordinals (a variant of 11.B in Kechris, _Classical Descriptive Set Theory_).
+
+The main difference is that the hierarchy starts at level 0, which is intented
+to comprise basic _closed_ sets and its complements.
 -/
 @[protected]
 def sigma0_pi0_rec : ordinal.{u} → set (set α) × set (set α)
@@ -123,13 +127,16 @@ def sigma0 : set (set α) := (sigma0_pi0_rec i).fst
 
 def pi0 : set (set α) := (sigma0_pi0_rec i).snd
 
-theorem sigma0_pi0_rec_def' : sigma0_pi0_rec i = ⟨sigma0 i, pi0 i⟩ := by { unfold pi0 sigma0, simp }
+lemma sigma0_pi0_rec_def' :
+  sigma0_pi0_rec i = ⟨sigma0 i, pi0 i⟩ :=
+by { unfold pi0 sigma0, simp }
 
-theorem sigma0_eq_Union_pi0 :
-sigma0 i =  s ∪ {∅} ∪  set.range (λ (f : ℕ → ⋃ j (hij : j < i), pi0 j), ⋃ n, (f n).1) :=
+lemma sigma0_eq_Union_pi0 :
+  sigma0 i = s ∪ {∅} ∪ set.range (λ (f : ℕ → ⋃ j (hij : j < i), pi0 j), ⋃ n, (f n).1) :=
 by { unfold sigma0 sigma0_pi0_rec, simp, congr }
 
-theorem pi0_subset_sigma0 (hik : i < k) : pi0 i ⊆ sigma0 k :=
+lemma pi0_subset_sigma0 (hik : i < k) :
+  pi0 i ⊆ sigma0 k :=
 begin
   simp only [sigma0_eq_Union_pi0,hik],
   apply subset_union_of_subset_right,
@@ -143,10 +150,11 @@ begin
   exact Union_const x
 end
 
-theorem pi0_eq_compl_sigma0: pi0 i = compl '' sigma0 i :=
+lemma pi0_eq_compl_sigma0 :
+  pi0 i = compl '' sigma0 i :=
 by { unfold sigma0 pi0 sigma0_pi0_rec }
 
-theorem self_subset_sigma0 :
+lemma self_subset_sigma0 :
   s ⊆ sigma0 i :=
 begin
   unfold sigma0 sigma0_pi0_rec,
@@ -154,7 +162,7 @@ begin
   exact subset_rfl
 end
 
-theorem compl_self_subset_pi0 :
+lemma compl_self_subset_pi0 :
   compl '' s ⊆ pi0 i :=
 begin
   unfold pi0 sigma0_pi0_rec, simp only,
@@ -163,17 +171,19 @@ begin
   exact subset_rfl
 end
 
-theorem empty_mem_sigma0 :
+lemma empty_mem_sigma0 :
   ∅ ∈ sigma0 i :=
 begin
   unfold sigma0 sigma0_pi0_rec, simp only,
   exact mem_union_left _ (mem_union_right _ (mem_singleton ∅))
 end
 
-theorem univ_mem_pi0 :
-set.univ ∈ pi0 i := by { simp [pi0_eq_compl_sigma0,empty_mem_sigma0] }
+lemma univ_mem_pi0 :
+  set.univ ∈ pi0 i :=
+by { simp [pi0_eq_compl_sigma0,empty_mem_sigma0] }
 
-theorem sigma0_subset_sigma0 (hik : i ≤ k) : sigma0 i ⊆ sigma0 k :=
+lemma sigma0_subset_sigma0 (hik : i ≤ k) :
+  sigma0 i ⊆ sigma0 k :=
 begin
   rw le_iff_lt_or_eq at hik,
   cases hik,
@@ -203,7 +213,8 @@ begin
   tauto,
 end
 
-theorem pi0_subset_pi0 (i k : ordinal.{u}) (hik : i ≤ k) : pi0 i ⊆ pi0 k :=
+lemma pi0_subset_pi0 (hik : i ≤ k) :
+  pi0 i ⊆ pi0 k :=
 begin
   rw [pi0_eq_compl_sigma0,pi0_eq_compl_sigma0],
   exact image_subset _ (sigma0_subset_sigma0 s i k hik)
