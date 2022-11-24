@@ -78,6 +78,17 @@ begin
   exact subset_rfl
 end
 
+lemma sigma0_zero :
+  sigma0 0 = s ∪ {∅} :=
+begin
+  unfold sigma0 sigma0_pi0_rec,
+  simp,
+  calc
+  range (λ (f : ℕ → ↥(⋃ j (hij : j < 0), (sigma0_pi0_rec s j).snd)), ⋃ (n : ℕ), ↑(f n)) = ∅ :
+    by { simp [range_eq_empty, ordinal.not_lt_zero] }
+  ... ⊆ insert ∅ s : by simp,
+end
+
 lemma compl_self_subset_pi0 :
   compl '' s ⊆ pi0 i :=
 begin
