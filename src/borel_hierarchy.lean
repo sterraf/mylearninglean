@@ -26,37 +26,40 @@ variables (i k : ordinal.{u})
 Simultaneous recursive definition of Σ⁰ᵢ and Π⁰ᵢ pointclasses by recursion
 on ordinals (a variant of 11.B in Kechris, _Classical Descriptive Set Theory_).
 
-The main difference is that the hierarchy starts at level 0, which is intented
-to comprise basic _closed_ sets and its complements.
+The main difference is that the hierarchy starts at level 0: Π⁰₀ are intended to be basic open sets and Σ⁰₀ is the empty family.
 -/
 @[protected]
 def sigma0_pi0_rec : ordinal.{u} → set (set α) × set (set α)
 | i :=
-  let 
-    P_old := ⋃ j (hij : j < i), (sigma0_pi0_rec j).snd,
-    S := s ∪ {∅} ∪  set.range (λ (f : ℕ → P_old), ⋃ n, (f n).1),
-    P := compl '' S
-  in
-    ⟨S , P⟩
+    let 
+      P_old := ⋃ j (hij : j < i), (sigma0_pi0_rec j).snd,
+      S := if i = 0 then ∅ else set.range (λ (f : ℕ → P_old), ⋃ n, (f n).1),
+      P := if i = 0 then s else compl '' S
+    in
+      ⟨S , P⟩
 using_well_founded {dec_tac := `[exact hij]}
 
-def sigma0 : set (set α) := (sigma0_pi0_rec i).fst
+def sigma0 (i : ordinal.{u}) : set (set α) := (sigma0_pi0_rec i).fst
 
 def pi0 : set (set α) := (sigma0_pi0_rec i).snd
 
 lemma sigma0_pi0_rec_def' :
   sigma0_pi0_rec i = ⟨sigma0 i, pi0 i⟩ :=
-by { unfold pi0 sigma0, simp }
+by { unfold pi0 sigma0, simp } -- without the enveloping namespace, `unfold` fails
 
-lemma sigma0_eq_Union_pi0 :
-  sigma0 i = s ∪ {∅} ∪ set.range (λ (f : ℕ → ⋃ j (hij : j < i), pi0 j), ⋃ n, (f n).1) :=
-by { unfold sigma0 sigma0_pi0_rec, simp, congr }
+lemma sigma0_eq_Union_pi0:
+  sigma0 i = set.range (λ (f : ℕ → ⋃ j (hij : j < i), pi0 j), ⋃ n, (f n).1) :=
+begin
+  rcases classical.em (i=0) with ⟨hi⟩;
+  unfold sigma0 sigma0_pi0_rec,
+  { rw hi, apply eq.symm, simp [range_eq_empty, ordinal.not_lt_zero] },
+  { simp [h], congr }
+end
 
 lemma pi0_subset_sigma0 (hik : i < k) :
   pi0 i ⊆ sigma0 k :=
 begin
   simp only [sigma0_eq_Union_pi0,hik],
-  apply subset_union_of_subset_right,
   intros x hx,
   apply mem_range.mpr,
   have hxU : x ∈ ⋃ j < k, pi0 s j,
@@ -67,48 +70,43 @@ begin
   exact Union_const x
 end
 
-lemma pi0_eq_compl_sigma0 :
+lemma pi0_eq_compl_sigma0 (hi : i ≠ 0):
   pi0 i = compl '' sigma0 i :=
-by { unfold sigma0 pi0 sigma0_pi0_rec }
-
-lemma self_subset_sigma0 :
-  s ⊆ sigma0 i :=
-begin
-  unfold sigma0 sigma0_pi0_rec,
-  apply_rules [subset_union_of_subset_left],
-  exact subset_rfl
-end
+by { unfold sigma0 pi0 sigma0_pi0_rec, simp [hi] }
 
 lemma sigma0_zero :
-  sigma0 0 = s ∪ {∅} :=
-begin
-  unfold sigma0 sigma0_pi0_rec,
-  simp,
-  calc
-  range (λ (f : ℕ → ↥(⋃ j (hij : j < 0), (sigma0_pi0_rec s j).snd)), ⋃ (n : ℕ), ↑(f n)) = ∅ :
-    by { simp [range_eq_empty, ordinal.not_lt_zero] }
-  ... ⊆ insert ∅ s : by simp,
-end
+  sigma0 0 = ∅ :=
+by { unfold sigma0 sigma0_pi0_rec, simp }
 
-lemma compl_self_subset_pi0 :
-  compl '' s ⊆ pi0 i :=
-begin
-  unfold pi0 sigma0_pi0_rec, simp only,
-  rw [image_union,image_union],
-  apply_rules [subset_union_of_subset_left],
-  exact subset_rfl
-end
+lemma pi0_zero :
+  pi0 0 = s :=
+by { unfold pi0 sigma0_pi0_rec, simp }
 
-lemma empty_mem_sigma0 :
-  ∅ ∈ sigma0 i :=
+lemma sigma0_one :
+  sigma0 1 = set.range (λ (f : ℕ → s), ⋃ n, (f n).1) :=
 begin
-  unfold sigma0 sigma0_pi0_rec, simp only,
-  exact mem_union_left _ (mem_union_right _ (mem_singleton ∅))
+  unfold sigma0 sigma0_pi0_rec, simp,
+  ext z, simp,
+  refine ⟨λ h, _, λ h, _⟩;
+  rcases h with ⟨f,hf⟩,
+  { have f_in_s : ∀ n : ℕ, ↑(f n) ∈ s,
+    intro n,
+    rcases (mem_Union.mp (f n).property) with ⟨j,hf⟩,
+    rw ordinal.lt_one_iff_zero at hf,
+    simp at hf,
+    have j_0 := hf.left,
+    rw [j_0,sigma0_pi0_rec_def',pi0_zero] at hf,
+    exact hf.right,
+    use (λn, ⟨f n, f_in_s n⟩ : ℕ → ↥s),
+    exact hf },
+  { have Un_eq_s : (⋃ (j : ordinal) (hj : j < 1), (sigma0_pi0_rec s j).snd) = s,
+    { simp [ordinal.lt_one_iff_zero, sigma0_pi0_rec_def', pi0_zero] },
+    have f_in_s : ∀ (n : ℕ), ↑(f n) ∈ s := λn, (f n).property,
+    have f_in_Un : ∀ (n : ℕ), ↑(f n) ∈ (⋃ (j : ordinal) (hj : j < 1), (sigma0_pi0_rec s j).snd),
+    simp [Un_eq_s],
+    use (λn, ⟨f n, f_in_Un n⟩ : ℕ → ↥(⋃ (j : ordinal) (hj : j < 1), (sigma0_pi0_rec s j).snd)),
+    simp [hf] }
 end
-
-lemma univ_mem_pi0 :
-  set.univ ∈ pi0 i :=
-by { simp [pi0_eq_compl_sigma0,empty_mem_sigma0] }
 
 lemma sigma0_subset_sigma0 (hik : i ≤ k) :
   sigma0 i ⊆ sigma0 k :=
@@ -120,8 +118,6 @@ begin
   { simp [hik, subset_rfl] },
   -- Now the interesting `i < k`:
   repeat { rw sigma0_eq_Union_pi0 },
-  apply union_subset_union,
-  { exact subset_refl _ },
   intros x hx,
   cases hx with f hf,
   simp only at hf,
@@ -141,11 +137,18 @@ begin
   tauto,
 end
 
-lemma pi0_subset_pi0 (hik : i ≤ k) :
+/--
+The hypothesis `i ≠ 0` is required in case elements of the generating set are
+not closed. If the underlying space is zero-dimensional, one can take a basis
+of clopen sets and the inclusion will hold unconditionally. 
+-/
+lemma pi0_subset_pi0 (hi : i ≠ 0) (hik : i ≤ k) :
   pi0 i ⊆ pi0 k :=
 begin
   rw [pi0_eq_compl_sigma0,pi0_eq_compl_sigma0],
-  exact image_subset _ (sigma0_subset_sigma0 s i k hik)
+  exacts [image_subset _ (sigma0_subset_sigma0 s i k hik),
+    ordinal.one_le_iff_ne_zero.mp (trans (ordinal.one_le_iff_ne_zero.mpr hi) hik),
+    hi] 
 end
 
 end sigma0_pi0_rec
