@@ -1,11 +1,10 @@
 import set_theory.cardinal.ordinal
 
-open ordinal cardinal set
-
 universe u 
 
 namespace ordinal
 
+open cardinal 
 /--
 The first uncountable ordinal in type universe `u`.
 -/
@@ -17,6 +16,8 @@ end ordinal
 namespace pointclasses
 
 section sigma0_pi0_rec
+
+open set
 
 parameters {α : Type u} (s : set (set α))
 variables (i k : ordinal.{u})
@@ -152,6 +153,8 @@ end sigma0_pi0_rec
 end pointclasses
 
 section inductive_generate
+
+open set
 
 variables {α : Type u} (s : set (set α))
 
