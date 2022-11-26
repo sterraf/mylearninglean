@@ -152,6 +152,51 @@ begin
 end
 
 end sigma0_pi0
+
+section up_to_omega1
+
+parameters {α : Type u} (s : set (set α))
+variables (i k : ordinal.{u})
+
+open set ordinal
+
+lemma sup_sequence_lt_omega1 (o : ℕ → ordinal) (ho : ∀ (n : ℕ), o n < ω₁):
+  sup o < ω₁ :=
+sorry
+
+lemma is_limit_omega1 :
+  ω₁.is_limit :=
+cardinal.ord_is_limit (cardinal.aleph_0_le_aleph 1)
+
+lemma sigma0_omega1_eq_Union :
+  sigma0 s ω₁ = ⋃ j (hij : j < ω₁), sigma0 s j :=
+begin
+  apply subset_antisymm,
+  { rw sigma0_eq_Union_pi0,
+    intros x hx,
+    simp at *,
+    cases hx with f hf,
+    let g := λ n, (f n).property,
+    simp at g,
+    choose o ho using g,
+    use order.succ(sup o),
+    split,
+    { exact is_limit.succ_lt is_limit_omega1 (sup_sequence_lt_omega1 o (λ (n : ℕ), (ho n).left)) },
+    rw sigma0_eq_Union_pi0,
+    simp,
+    have typf : ∀ n : ℕ, ↑(f n) ∈ ⋃ (j : ordinal) (hij : j < order.succ (sup o)), pi0 s j,
+    { intro n, apply mem_Union.2,
+      specialize ho n,
+      use o n,
+      exact mem_Union.2 ⟨lt_of_le_of_lt (le_sup o n) (order.lt_succ (sup o)),ho.2⟩ },
+    use λ n : ℕ, (⟨f n, typf n⟩ : ⋃ (j : ordinal) (hij : j < order.succ (sup o)), pi0 s j),
+    tauto },
+  { simp,
+    exact λ _ hi, sigma0_subset_sigma0 s _ _ (le_of_lt hi) }
+end 
+
+end up_to_omega1
+
 end pointclasses
 
 section inductive_generate
