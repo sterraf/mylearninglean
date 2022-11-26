@@ -15,7 +15,7 @@ end ordinal
 
 namespace pointclasses
 
-section sigma0_pi0_rec
+section sigma0_pi0
 
 open set
 
@@ -50,10 +50,10 @@ by { unfold pi0 sigma0, simp } -- without the enveloping namespace, `unfold` fai
 lemma sigma0_eq_Union_pi0:
   sigma0 i = set.range (λ (f : ℕ → ⋃ j (hij : j < i), pi0 j), ⋃ n, (f n).1) :=
 begin
-  rcases classical.em (i=0) with ⟨hi⟩;
+  rcases classical.em (i=0) with hi | hi;
   unfold sigma0 sigma0_pi0_rec,
   { rw hi, apply eq.symm, simp [range_eq_empty, ordinal.not_lt_zero] },
-  { simp [h], congr }
+  { simp [hi], congr }
 end
 
 lemma pi0_subset_sigma0 (hik : i < k) :
@@ -151,8 +151,7 @@ begin
     hi] 
 end
 
-end sigma0_pi0_rec
-
+end sigma0_pi0
 end pointclasses
 
 section inductive_generate
