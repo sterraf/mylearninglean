@@ -1,4 +1,4 @@
-import set_theory.cardinal.ordinal
+import set_theory.cardinal.cofinality
 
 universe u 
 
@@ -158,11 +158,17 @@ section up_to_omega1
 parameters {α : Type u} (s : set (set α))
 variables (i k : ordinal.{u})
 
-open set ordinal
+open set ordinal cardinal
+open_locale ordinal
 
-lemma sup_sequence_lt_omega1 (o : ℕ → ordinal) (ho : ∀ n, o n < ω₁):
+lemma sup_sequence_lt_omega1 (o : ℕ → ordinal.{u}) (ho : ∀ n, o n < ω₁):
   sup o < ω₁ :=
-sorry
+begin
+  apply sup_lt_ord_lift _ ho,
+  simp,
+  rw [cardinal.is_regular_aleph_one.cof_eq],
+  exact aleph_0_lt_aleph_one,
+end
 
 lemma is_limit_omega1 :
   ω₁.is_limit :=
