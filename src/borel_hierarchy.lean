@@ -66,7 +66,7 @@ begin
   { simp,
     use i,
     exact ⟨hik,hx⟩ },
-  existsi (λn : ℕ, (⟨x,hxU⟩ : ⋃ (j : ordinal) (hij : j < k), pi0 s j)),
+  existsi (λn : ℕ, (⟨x,hxU⟩ : ⋃ (j < k), pi0 s j)),
   exact Union_const x
 end
 
@@ -89,7 +89,7 @@ begin
   ext z, simp,
   refine ⟨λ h, _, λ h, _⟩;
   rcases h with ⟨f,hf⟩,
-  { have f_in_s : ∀ n : ℕ, ↑(f n) ∈ s,
+  { have f_in_s : ∀ n, ↑(f n) ∈ s,
     intro n,
     rcases (mem_Union.mp (f n).property) with ⟨j,hf⟩,
     rw ordinal.lt_one_iff_zero at hf,
@@ -99,12 +99,12 @@ begin
     exact hf.right,
     use (λn, ⟨f n, f_in_s n⟩ : ℕ → ↥s),
     exact hf },
-  { have Un_eq_s : (⋃ (j : ordinal) (hj : j < 1), (sigma0_pi0_rec s j).snd) = s,
+  { have Un_eq_s : (⋃ (j < 1), (sigma0_pi0_rec s j).snd) = s,
     { simp [ordinal.lt_one_iff_zero, sigma0_pi0_rec_def', pi0_zero] },
-    have f_in_s : ∀ (n : ℕ), ↑(f n) ∈ s := λn, (f n).property,
-    have f_in_Un : ∀ (n : ℕ), ↑(f n) ∈ (⋃ (j : ordinal) (hj : j < 1), (sigma0_pi0_rec s j).snd),
+    have f_in_s : ∀ n, ↑(f n) ∈ s := λn, (f n).property,
+    have f_in_Un : ∀ n, ↑(f n) ∈ (⋃ (j < 1), (sigma0_pi0_rec s j).snd),
     simp [Un_eq_s],
-    use (λn, ⟨f n, f_in_Un n⟩ : ℕ → ↥(⋃ (j : ordinal) (hj : j < 1), (sigma0_pi0_rec s j).snd)),
+    use (λn, ⟨f n, f_in_Un n⟩ : ℕ → ↥(⋃ (j < 1), (sigma0_pi0_rec s j).snd)),
     simp [hf] }
 end
 
@@ -160,7 +160,7 @@ variables (i k : ordinal.{u})
 
 open set ordinal
 
-lemma sup_sequence_lt_omega1 (o : ℕ → ordinal) (ho : ∀ (n : ℕ), o n < ω₁):
+lemma sup_sequence_lt_omega1 (o : ℕ → ordinal) (ho : ∀ n, o n < ω₁):
   sup o < ω₁ :=
 sorry
 
@@ -169,7 +169,7 @@ lemma is_limit_omega1 :
 cardinal.ord_is_limit (cardinal.aleph_0_le_aleph 1)
 
 lemma sigma0_omega1_eq_Union :
-  sigma0 s ω₁ = ⋃ j (hij : j < ω₁), sigma0 s j :=
+  sigma0 s ω₁ = ⋃ (j < ω₁), sigma0 s j :=
 begin
   apply subset_antisymm,
   { rw sigma0_eq_Union_pi0,
@@ -181,15 +181,15 @@ begin
     choose o ho using g,
     use order.succ(sup o),
     split,
-    { exact is_limit.succ_lt is_limit_omega1 (sup_sequence_lt_omega1 o (λ (n : ℕ), (ho n).left)) },
+    { exact is_limit.succ_lt is_limit_omega1 (sup_sequence_lt_omega1 o (λ n, (ho n).left)) },
     rw sigma0_eq_Union_pi0,
     simp,
-    have typf : ∀ n : ℕ, ↑(f n) ∈ ⋃ (j : ordinal) (hij : j < order.succ (sup o)), pi0 s j,
+    have typf : ∀ n, ↑(f n) ∈ ⋃ (j < order.succ (sup o)), pi0 s j,
     { intro n, apply mem_Union.2,
       specialize ho n,
       use o n,
       exact mem_Union.2 ⟨lt_of_le_of_lt (le_sup o n) (order.lt_succ (sup o)),ho.2⟩ },
-    use λ n : ℕ, (⟨f n, typf n⟩ : ⋃ (j : ordinal) (hij : j < order.succ (sup o)), pi0 s j),
+    use λ n, (⟨f n, typf n⟩ : ⋃ (j < order.succ (sup o)), pi0 s j),
     tauto },
   { simp,
     exact λ _ hi, sigma0_subset_sigma0 s _ _ (le_of_lt hi) }
