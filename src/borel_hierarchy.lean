@@ -159,7 +159,6 @@ parameters {α : Type u} (s : set (set α))
 variables (i k : ordinal.{u})
 
 open set ordinal cardinal
-open_locale ordinal
 
 lemma sup_sequence_lt_omega1 (o : ℕ → ordinal.{u}) (ho : ∀ n, o n < ω₁):
   sup o < ω₁ :=
@@ -171,8 +170,7 @@ begin
 end
 
 lemma is_limit_omega1 :
-  ω₁.is_limit :=
-cardinal.ord_is_limit (cardinal.aleph_0_le_aleph 1)
+  ω₁.is_limit := ord_is_limit (aleph_0_le_aleph 1)
 
 lemma sigma0_omega1_eq_Union :
   sigma0 s ω₁ = ⋃ (j < ω₁), sigma0 s j :=
@@ -194,7 +192,7 @@ begin
     { intro n, apply mem_Union.2,
       specialize ho n,
       use o n,
-      exact mem_Union.2 ⟨lt_of_le_of_lt (le_sup o n) (order.lt_succ (sup o)),ho.2⟩ },
+      exact mem_Union.2 ⟨lt_of_le_of_lt (le_sup o n) (order.lt_succ (sup o)), ho.2⟩ },
     use λ n, (⟨f n, typf n⟩ : ⋃ (j < order.succ (sup o)), pi0 s j),
     tauto },
   { simp,
