@@ -153,7 +153,7 @@ begin
     hi]
 end
 
-lemma Union_of_mem_sigma0 {g : ℕ → sigma0 i} :
+lemma Union_of_sigma0_sequence {g : ℕ → sigma0 i} :
   (⋃ n, (g n).val) ∈ sigma0 i :=
 begin
   have hg : ∀ n : ℕ, (g n).val ∈ sigma0 s i := λ n, (g n).property,
@@ -183,9 +183,9 @@ begin
     exact hk }
 end
 
-lemma Union_sequence_mem_sigma0 {f : ℕ → set α} (hf : ∀ n, f n ∈ sigma0 i):
+lemma Union_of_mem_sigma0 {f : ℕ → set α} (hf : ∀ n, f n ∈ sigma0 i):
   (⋃ n, f n) ∈ sigma0 i :=
-by exact @Union_of_mem_sigma0 _ s i (λn, {val := f n, property := hf n} : ℕ → sigma0 s i)
+by exact @Union_of_sigma0_sequence _ s i (λn, {val := f n, property := hf n} : ℕ → sigma0 s i)
 
 end sigma0_pi0
 
@@ -284,7 +284,7 @@ end
 
 theorem Union_mem_gen_measurable {f : ℕ → set α} (hf : ∀ n, f n ∈ gen_measurable) :
   (⋃ n, f n) ∈ gen_measurable :=
-by { unfold gen_measurable at *, exact Union_sequence_mem_sigma0 s ω₁ hf }
+by { unfold gen_measurable at *, exact Union_of_mem_sigma0 s ω₁ hf }
 
 end gen_measurable
 
