@@ -1,4 +1,5 @@
 import set_theory.cardinal.cofinality
+import measure_theory.measurable_space_def
 
 universe u 
 
@@ -34,7 +35,7 @@ def sigma0_pi0_rec : ordinal.{u} → set (set α) × set (set α)
     let 
       P_old := ⋃ j (hij : j < i), (sigma0_pi0_rec j).snd,
       S := if i = 0 then ∅ else set.range (λ (f : ℕ → P_old), ⋃ n, (f n).1),
-      P := if i = 0 then s else compl '' S
+      P := if i = 0 then s ∪ {∅,univ} else compl '' S
     in
       ⟨S , P⟩
 using_well_founded {dec_tac := `[exact hij]}
@@ -79,17 +80,17 @@ lemma sigma0_zero :
 by { unfold sigma0 sigma0_pi0_rec, simp }
 
 lemma pi0_zero :
-  pi0 0 = s :=
+  pi0 0 = s ∪ {∅,univ} :=
 by { unfold pi0 sigma0_pi0_rec, simp }
 
 lemma sigma0_one :
-  sigma0 1 = set.range (λ (f : ℕ → s), ⋃ n, (f n).1) :=
+  sigma0 1 = set.range (λ (f : ℕ → s ∪ {∅,univ}), ⋃ n, (f n).1) :=
 begin
   unfold sigma0 sigma0_pi0_rec, simp,
   ext z, simp,
   refine ⟨λ h, _, λ h, _⟩;
   rcases h with ⟨f,hf⟩,
-  { have f_in_s : ∀ n, ↑(f n) ∈ s,
+  { have f_in_s : ∀ n, ↑(f n) ∈ s ∪ {∅,univ},
     intro n,
     rcases (mem_Union.mp (f n).property) with ⟨j,hf⟩,
     rw ordinal.lt_one_iff_zero at hf,
@@ -97,13 +98,13 @@ begin
     have j_0 := hf.left,
     rw [j_0,sigma0_pi0_rec_def',pi0_zero] at hf,
     exact hf.right,
-    use (λn, ⟨f n, f_in_s n⟩ : ℕ → ↥s),
+    use (λn, ⟨f n, f_in_s n⟩ : ℕ → ↥(s ∪ {∅, univ})),
     exact hf },
-  { have Un_eq_s : (⋃ (j < 1), (sigma0_pi0_rec s j).snd) = s,
+  { have Un_eq_s : (⋃ (j < 1), (sigma0_pi0_rec s j).snd) = s ∪ {∅, univ},
     { simp [ordinal.lt_one_iff_zero, sigma0_pi0_rec_def', pi0_zero] },
-    have f_in_s : ∀ n, ↑(f n) ∈ s := λn, (f n).property,
+    have f_in_s : ∀ n, ↑(f n) ∈ s ∪ {∅, univ} := λn, (f n).property,
     have f_in_Un : ∀ n, ↑(f n) ∈ (⋃ (j < 1), (sigma0_pi0_rec s j).snd),
-    simp [Un_eq_s],
+    { finish },
     use (λn, ⟨f n, f_in_Un n⟩ : ℕ → ↥(⋃ (j < 1), (sigma0_pi0_rec s j).snd)),
     simp [hf] }
 end
@@ -186,6 +187,26 @@ end
 lemma Union_of_mem_sigma0 {f : ℕ → set α} (hf : ∀ n, f n ∈ sigma0 i):
   (⋃ n, f n) ∈ sigma0 i :=
 by exact @Union_of_sigma0_sequence _ s i (λn, {val := f n, property := hf n} : ℕ → sigma0 s i)
+
+lemma self_subset_sigma0 (hi : ¬i = 0) :
+  s ⊆ sigma0 i :=
+begin
+  calc
+  s   ⊆ s ∪ {∅,univ} : subset_union_left _ _
+  ... = pi0 s 0      : eq.symm (pi0_zero s)
+  ... ⊆ sigma0 s i   : pi0_subset_sigma0 s 0 i (ordinal.pos_iff_ne_zero.mpr hi),
+end
+
+theorem empty_mem_sigma0 (hi : ¬i = 0) :
+  ∅ ∈ sigma0 i :=
+begin
+  have : ∅ ∈ s ∪ {∅,univ} := by { apply mem_union_right, simp },
+  have that : s ∪ {∅,univ} = pi0 s 0 := eq.symm (pi0_zero s),
+  rw that at this,
+  calc
+  ∅   ∈ pi0 s 0      : this
+  ... ⊆ sigma0 s i   : pi0_subset_sigma0 s 0 i (ordinal.pos_iff_ne_zero.mpr hi)
+end
 
 end sigma0_pi0
 
