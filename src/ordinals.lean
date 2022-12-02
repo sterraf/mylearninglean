@@ -27,3 +27,55 @@ begin
   simp,
 end
 
+namespace inductive_generate
+
+open set
+
+universe u
+variables {α : Type u} (s : set (set α))
+
+-- Experimenting with the code provided by Junyan Xu
+inductive generate_from (s : set (set α)) : ordinal.{u} → set α → Prop
+| basic : ∀ o (u ∈ s), generate_from o u
+| empty : ∀ o, generate_from o ∅
+| compl : ∀ o u (o' < o), generate_from o' u → generate_from o uᶜ
+| union : ∀ o (f : ℕ → set α) (o' : ℕ → ordinal.{u}), (∀ n, o' n < o) →
+  (∀ n, generate_from (o' n) (f n)) → generate_from o (⋃ i, f i)
+
+def gen_from_set' (s : set (set α)) : ordinal.{u} → set (set α) := generate_from s
+
+example : gen_from_set' s 0 = s ∪ {∅}:=
+begin
+  unfold gen_from_set',
+  ext, split;
+  intro hx,
+  { cases hx with _ _ hxins o' o x o ho gensx _ f o' ho'lt geno'f,
+    -- record the variables above.
+    { exact mem_union_left _ hxins },
+    { finish },
+    { exfalso,
+      exact ordinal.not_lt_zero _ ho },
+    { exfalso,
+      exact ordinal.not_lt_zero _ (ho'lt 0) },
+  },
+  { cases hx,
+    { exact generate_from.basic 0 x hx }, -- Is there be a better inductive way
+    { simp at hx,
+      rw hx,
+      exact generate_from.empty 0 } } -- than using these `exact`s?
+end
+
+/--
+First attempt to prove an induction lemma for `generate_from`.
+-/
+lemma generate_from_induction (s : set (set α)) (P : set α → Prop) (i : ordinal.{u}) (x : set α)
+(h_basic : ∀ (x ∈ s), P x)
+(h_empty : P ∅)
+(h_compl : ∀x, P x → P (xᶜ))
+(h_union : ∀ (f : ℕ → set α), (∀ n, P (f n)) → P (⋃ i, f i)) (hsox: generate_from s i x) : P x :=
+begin
+  induction hsox with o y hxins o' o y o' ho'o gensx IH o f h hnlto genhf IH,
+  exacts [h_basic y hxins, h_empty, h_compl y IH, h_union f IH]
+end
+
+end inductive_generate

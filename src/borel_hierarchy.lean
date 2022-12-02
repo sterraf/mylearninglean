@@ -6,11 +6,20 @@ universe u
 namespace ordinal
 
 open cardinal 
+
 /--
 The first uncountable ordinal in type universe `u`.
 -/
 @[reducible]
 noncomputable def ω₁ := (aleph 1 : cardinal.{u}).ord
+
+lemma omega_lt_omega1 :
+  omega < ω₁ :=
+begin
+  have := (ord_lt_ord.mpr (aleph_0_lt_aleph_one)),
+  rw ord_aleph_0 at this,
+  exact this
+end
 
 end ordinal
 
@@ -27,7 +36,8 @@ variables (i k : ordinal.{u})
 Simultaneous recursive definition of Σ⁰ᵢ and Π⁰ᵢ pointclasses by recursion
 on ordinals (a variant of 11.B in Kechris, _Classical Descriptive Set Theory_).
 
-The main difference is that the hierarchy starts at level 0: Π⁰₀ are intended to be basic open sets and Σ⁰₀ is the empty family.
+The main difference is that the hierarchy starts at level 0: Π⁰₀ are intended to
+be basic open sets (augmented with `∅` and `univ`) and Σ⁰₀ is the empty family.
 -/
 @[protected]
 def sigma0_pi0_rec : ordinal.{u} → set (set α) × set (set α)
@@ -51,9 +61,9 @@ by { unfold pi0 sigma0, simp } -- without the enveloping namespace, `unfold` fai
 lemma sigma0_eq_Union_pi0:
   sigma0 i = set.range (λ (f : ℕ → ⋃ j (hij : j < i), pi0 j), ⋃ n, (f n).1) :=
 begin
-  rcases classical.em (i=0) with hi | hi;
+  rcases classical.em (i=0) with rfl | hi;
   unfold sigma0 sigma0_pi0_rec,
-  { rw hi, apply eq.symm, simp [range_eq_empty, ordinal.not_lt_zero] },
+  { apply eq.symm, simp [range_eq_empty, ordinal.not_lt_zero] },
   { simp [hi], congr }
 end
 
@@ -75,6 +85,7 @@ lemma pi0_eq_compl_sigma0 (hi : ¬i = 0):
   pi0 i = compl '' sigma0 i :=
 by { unfold sigma0 pi0 sigma0_pi0_rec, simp [hi] }
 
+@[simp]
 lemma sigma0_zero :
   sigma0 0 = ∅ :=
 by { unfold sigma0 sigma0_pi0_rec, simp }
@@ -95,8 +106,7 @@ begin
     rcases (mem_Union.mp (f n).property) with ⟨j,hf⟩,
     rw ordinal.lt_one_iff_zero at hf,
     simp at hf,
-    have j_0 := hf.left,
-    rw [j_0,sigma0_pi0_rec_def',pi0_zero] at hf,
+    simp_rw [hf.left,sigma0_pi0_rec_def',pi0_zero] at hf,
     exact hf.right,
     use (λn, ⟨f n, f_in_s n⟩ : ℕ → ↥(s ∪ {∅, univ})),
     exact hf },
@@ -229,9 +239,13 @@ end
 lemma is_limit_omega1 :
   ω₁.is_limit := ord_is_limit (aleph_0_le_aleph 1)
 
-lemma bound_omega1_of_increasing_of_sequence {A : ordinal → set (set α)}
+/--
+Denumerably many elements chosen from a nondecreasing `ω₁`-sequence of sets,
+all lie in one of the sets.
+-/
+lemma bound_omega1_of_increasing_of_sequence {β : Type*} {A : ordinal → set β}
   {hA : ∀ j k (hjk : j ≤ k), A j ⊆ A k}
-  {f : ℕ → set α} (hf : ∀ n, ∃ i, i < ω₁ ∧ f n ∈ A i) :
+  {f : ℕ → β} (hf : ∀ n, ∃ i, i < ω₁ ∧ f n ∈ A i) :
   ∃ i (hi : i < ω₁), ∀ n, f n ∈ A i :=
 begin
   choose o ho using hf,
@@ -278,14 +292,6 @@ begin
     exact λ _ hi, sigma0_subset_sigma0 s _ _ (le_of_lt hi) }
 end 
 
-lemma omega_lt_omega1 : 
-  omega < ω₁ :=
-begin
-  have := (ord_lt_ord.mpr (aleph_0_lt_aleph_one)),
-  rw ord_aleph_0 at this,
-  exact this
-end 
-
 theorem compl_mem_gen_measurable (t : set α) (ht : t ∈ gen_measurable) :
   tᶜ ∈ gen_measurable :=
 begin
@@ -293,7 +299,7 @@ begin
   simp at ht,
   cases ht with o ho,
   rcases classical.em (o=0) with rfl | onon,
-  { finish [sigma0_zero] },
+  { finish },
   calc
   tᶜ ∈ pi0 s o :
     by { rw pi0_eq_compl_sigma0,
@@ -356,55 +362,3 @@ end
 end gen_measurable
 
 end pointclasses
-
-section inductive_generate
-
-open set
-
-variables {α : Type u} (s : set (set α))
-
--- Experimenting with the code provided by Junyan Xu
-inductive generate_from (s : set (set α)) : ordinal.{u} → set α → Prop
-| basic : ∀ o (u ∈ s), generate_from o u
-| empty : ∀ o, generate_from o ∅
-| compl : ∀ o u (o' < o), generate_from o' u → generate_from o uᶜ
-| union : ∀ o (f : ℕ → set α) (o' : ℕ → ordinal.{u}), (∀ n, o' n < o) →
-  (∀ n, generate_from (o' n) (f n)) → generate_from o (⋃ i, f i)
-
-def gen_from_set' (s : set (set α)) : ordinal.{u} → set (set α) := generate_from s
-
-example : gen_from_set' s 0 = s ∪ {∅}:=
-begin
-  unfold gen_from_set',
-  ext, split;
-  intro hx,
-  { cases hx with _ _ hxins o' o x o ho gensx _ f o' ho'lt geno'f,
-    -- record the variables above.
-    { exact mem_union_left _ hxins },
-    { finish },
-    { exfalso,
-      exact ordinal.not_lt_zero _ ho },
-    { exfalso,
-      exact ordinal.not_lt_zero _ (ho'lt 0) },
-  },
-  { cases hx,
-    { exact generate_from.basic 0 x hx }, -- Is there be a better inductive way
-    { simp at hx,
-      rw hx,
-      exact generate_from.empty 0 } } -- than using these `exact`s?
-end
-
-/--
-First attempt to prove an induction lemma for `generate_from`.
--/
-lemma generate_from_induction (s : set (set α)) (P : set α → Prop) (i : ordinal.{u}) (x : set α)
-(h_basic : ∀ (x ∈ s), P x)
-(h_empty : P ∅)
-(h_compl : ∀x, P x → P (xᶜ))
-(h_union : ∀ (f : ℕ → set α), (∀ n, P (f n)) → P (⋃ i, f i)) (hsox: generate_from s i x) : P x :=
-begin
-  induction hsox with o y hxins o' o y o' ho'o gensx IH o f h hnlto genhf IH,
-  exacts [h_basic y hxins, h_empty, h_compl y IH, h_union f IH]
-end
-
-end inductive_generate
