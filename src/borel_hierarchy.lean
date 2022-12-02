@@ -104,12 +104,12 @@ begin
   { have f_in_s : ∀ n, ↑(f n) ∈ s ∪ {∅,univ},
     intro n,
     rcases (mem_Union.mp (f n).property) with ⟨j,hf⟩,
-    rw ordinal.lt_one_iff_zero at hf,
-    simp at hf,
-    simp_rw [hf.left,sigma0_pi0_rec_def',pi0_zero] at hf,
-    exact hf.right,
-    use (λn, ⟨f n, f_in_s n⟩ : ℕ → ↥(s ∪ {∅, univ})),
-    exact hf },
+    { rw ordinal.lt_one_iff_zero at hf,
+      simp at hf,
+      simp_rw [hf.left,sigma0_pi0_rec_def',pi0_zero] at hf,
+      exact hf.right },
+    { use (λn, ⟨f n, f_in_s n⟩ : ℕ → ↥(s ∪ {∅, univ})),
+      exact hf } },
   { have Un_eq_s : (⋃ (j < 1), (sigma0_pi0_rec s j).snd) = s ∪ {∅, univ},
     { simp [ordinal.lt_one_iff_zero, sigma0_pi0_rec_def', pi0_zero] },
     have f_in_s : ∀ n, ↑(f n) ∈ s ∪ {∅, univ} := λn, (f n).property,
@@ -301,11 +301,7 @@ begin
   rcases classical.em (o=0) with rfl | onon,
   { finish },
   calc
-  tᶜ ∈ pi0 s o :
-    by { rw pi0_eq_compl_sigma0,
-    simp,
-    exact ho.2,
-    assumption } 
+  tᶜ  ∈ pi0 s o          : by { rw pi0_eq_compl_sigma0, simp, exacts [ho.2,onon] }
   ... ⊆ gen_measurable s : pi0_subset_sigma0 s o ω₁ ho.1,
 end
 
@@ -327,6 +323,7 @@ begin
     have fn_in : (f n).val ∈ ⋃ (j : ordinal) (hij : j < i), pi0 s j := (f n).property,
     simp at fn_in,
     rcases fn_in with ⟨o,⟨o_lt_i,fn_in⟩⟩,
+    -- Case `(f n).val ∈ pi0 s 0`.
     rcases classical.em (o=0) with rfl | honz,
     { rw pi0_zero at fn_in,
       rcases fn_in with  fn_in | fn_emp | fn_in,
@@ -334,7 +331,7 @@ begin
       { rw fn_emp, exact generate_measurable.empty },
       { simp at fn_in, rw [fn_in,←compl_empty],
         exact generate_measurable.compl _ generate_measurable.empty } },
-    -- The case `o ≠ 0`.
+    -- Case `(f n).val ∈ pi0 s o` with `o ≠ 0`.
     simp at IH,
     rw pi0_eq_compl_sigma0 s o honz at fn_in,
     rw ← compl_compl ↑(f n),
