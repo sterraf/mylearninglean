@@ -364,7 +364,24 @@ section card_gen_measurable
 parameters {α : Type u} (s : set (set α))
 variables (i k : ordinal.{u})
 
-open set measurable_space cardinal
+lemma nonempty_equiv_compl {β : Type*} (A : set (set β)) :
+  nonempty (A ≃ compl '' A) :=
+begin
+  have h_to: ∀ x, x ∈ A → xᶜ ∈ compl '' A,
+  { intros x hx, simp [hx] },
+  have h_inv : ∀ x, x ∈ compl '' A → xᶜ ∈ A,
+  { intros x hx,
+    simp at hx,
+    rcases hx with ⟨y,hy,rfl⟩,
+    simp [hy] },
+  exact nonempty.intro
+  { to_fun    := λ x, {val := (x.val : (set β))ᶜ, property := h_to x.val x.property},
+    inv_fun   := λ x, {val := (x.val : (set β))ᶜ, property := h_inv x.val x.property},
+    left_inv  := by { intro x, simp },
+    right_inv := by { intro x, simp } }
+end
+
+open set measurable_space cardinal      
 open_locale cardinal
 
 -- Essentially the same results in `measure_theory.card_measurable_space`.
@@ -383,8 +400,8 @@ begin
     apply mem_Union.mpr,
     use hj,
     exact hx },
-  have cardsigle : ∀ j < i, #(sigma0 s j) ≤ (max (# ↥s) 2 ^ aleph_0.{u}) :=
-    λ j (hj : j < i), IH j hj,
+  have cardcompl : ∀ j, #(sigma0 s j) = #(compl '' sigma0 s j),
+  { exact λ (j : ordinal), cardinal.eq.mpr (nonempty_equiv_compl (sigma0 s j)) },
   have J : #(↥(s ∪ {∅, univ} ∪ ⋃ j < i, compl '' sigma0 s j)) ≤ (max (#s) 2) ^ aleph_0.{u},
   { sorry },
   calc
