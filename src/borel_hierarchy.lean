@@ -1,5 +1,6 @@
 import set_theory.cardinal.cofinality
 import measure_theory.measurable_space_def
+import set_theory.cardinal.continuum
 
 universe u 
 
@@ -357,5 +358,74 @@ begin
 end
 
 end gen_measurable
+
+section card_gen_measurable
+
+parameters {α : Type u} (s : set (set α))
+variables (i k : ordinal.{u})
+
+open set measurable_space cardinal
+open_locale cardinal
+
+-- Essentially the same results in `measure_theory.card_measurable_space`.
+lemma cardinal_sigma0_le :
+  #(sigma0 s i) ≤ (max (#s) 2) ^ aleph_0.{u} :=
+begin
+  induction i using ordinal.induction with i IH,
+  have Upi0sub : (⋃ j < i, pi0 s j) ⊆ s ∪ {∅, univ} ∪ ⋃ j < i, compl '' sigma0 s j,
+  { simp,
+    intros j hj x hx,
+    rcases classical.em (j=0) with rfl | hjnz,
+    { simp [pi0_zero] at hx, exact mem_union_left _ hx },
+    rw pi0_eq_compl_sigma0 s j hjnz at hx,
+    apply mem_union_right _ (mem_Union.mpr _),
+    use j,
+    apply mem_Union.mpr,
+    use hj,
+    exact hx },
+  have cardsigle : ∀ j < i, #(sigma0 s j) ≤ (max (# ↥s) 2 ^ aleph_0.{u}) :=
+    λ j (hj : j < i), IH j hj,
+  have J : #(↥(s ∪ {∅, univ} ∪ ⋃ j < i, compl '' sigma0 s j)) ≤ (max (#s) 2) ^ aleph_0.{u},
+  { sorry },
+  calc
+  # ↥(sigma0 s i) =
+    # ↥(range (λ (f : ℕ → (↥⋃ j < i, pi0 s j)), ⋃ n, ↑(f n))) :
+    by { rw sigma0_eq_Union_pi0, simp }
+  ... ≤ # (ℕ → (↥⋃ j < i, pi0 s j))                 : mk_range_le
+  ... = prod (λ n : ℕ, #(↥⋃ j < i, pi0 s j))        : mk_pi _
+  ... = #(↥⋃ j < i, pi0 s j) ^ aleph_0.{u}          : by { simp [prod_const] }
+  ... ≤ #(↥(s ∪ {∅, univ} ∪ ⋃ j < i, compl '' sigma0 s j)) ^ aleph_0.{u} :
+    power_le_power_right (mk_le_mk_of_subset Upi0sub)
+  ... ≤ (max (# ↥s) 2 ^ aleph_0.{u}) ^ aleph_0.{u}  : power_le_power_right J
+  ... ≤ (max (# ↥s) 2 ^ aleph_0.{u})                :
+    by { rwa [← power_mul, aleph_0_mul_aleph_0] }
+end
+
+theorem cardinal_gen_measurable_le :
+  #(gen_measurable s) ≤ (max (#s) 2) ^ aleph_0.{u} := cardinal_sigma0_le _
+
+theorem cardinal_generate_measurable_le :
+  #{t | generate_measurable s t} ≤ (max (#s) 2) ^ aleph_0.{u} :=
+begin
+  rw generate_measurable_eq_gen_measurable,
+  exact cardinal_gen_measurable_le s,
+end
+
+theorem cardinal_measurable_set_le' :
+  #{t | @measurable_set α (generate_from s) t} ≤ (max (#s) 2) ^ aleph_0.{u} :=
+cardinal_generate_measurable_le
+
+theorem cardinal_generate_measurable_le_continuum (hs : #s ≤ 𝔠) :
+  #{t | generate_measurable s t} ≤ 𝔠 :=
+(cardinal_generate_measurable_le).trans begin
+  rw ←continuum_power_aleph_0,
+  exact_mod_cast power_le_power_right (max_le hs (nat_lt_continuum 2).le)
+end
+
+theorem cardinal_measurable_set_le_continuum :
+  #s ≤ 𝔠 → #{t | @measurable_set α (generate_from s) t} ≤ 𝔠 :=
+cardinal_generate_measurable_le_continuum
+
+end card_gen_measurable
 
 end pointclasses
