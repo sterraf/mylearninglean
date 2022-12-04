@@ -402,13 +402,29 @@ begin
     exact hx },
   have cardcompl : ∀ j, #(sigma0 s j) = #(compl '' sigma0 s j),
   { exact λ (j : ordinal), cardinal.eq.mpr (nonempty_equiv_compl (sigma0 s j)) },
+  have A := aleph_0_le_aleph 1,
+  have B : aleph 1 ≤ (max (#s) 2) ^ aleph_0.{u} :=
+    aleph_one_le_continuum.trans (power_le_power_right (le_max_right _ _)),
+  have C : ℵ₀ ≤ (max (#s) 2) ^ aleph_0.{u} := A.trans B,
+  have L : #(↥(s ∪ {∅, univ})) ≤ (max (#s) 2) ^ aleph_0.{u},
+  { apply_rules [(mk_union_le _ _).trans, add_le_of_le C, mk_image_le.trans],
+    { exact (le_max_left _ _).trans (self_le_power _ one_lt_aleph_0.le) },
+    repeat { simp [mk_singleton], exact one_lt_aleph_0.le.trans C } },
+  have K : #(↥⋃ j < i, compl '' sigma0 s j) ≤ (max (#s) 2) ^ aleph_0.{u} := sorry,
   have J : #(↥(s ∪ {∅, univ} ∪ ⋃ j < i, compl '' sigma0 s j)) ≤ (max (#s) 2) ^ aleph_0.{u},
-  { sorry },
+    { calc
+    #(↥(s ∪ {∅, univ} ∪ ⋃ j < i, compl '' sigma0 s j)) ≤
+      #(↥(s ∪ {∅, univ})) + #(↥⋃ j < i, compl '' sigma0 s j) : mk_union_le _ _
+    ... ≤ (max (#s) 2) ^ aleph_0.{u} + (max (#s) 2) ^ aleph_0.{u} :
+      (add_le_add (le_refl _) K).trans (add_le_add L (le_refl _))
+    ... = (max (#s) 2) ^ aleph_0.{u} :
+      (add_eq_max C).trans (max_eq_right (le_refl _)) },
+  -- The main calculation:
   calc
-  # ↥(sigma0 s i) =
-    # ↥(range (λ (f : ℕ → (↥⋃ j < i, pi0 s j)), ⋃ n, ↑(f n))) :
+  #↥(sigma0 s i) =
+    #↥(range (λ (f : ℕ → (↥⋃ j < i, pi0 s j)), ⋃ n, ↑(f n))) :
     by { rw sigma0_eq_Union_pi0, simp }
-  ... ≤ # (ℕ → (↥⋃ j < i, pi0 s j))                 : mk_range_le
+  ... ≤ #(ℕ → (↥⋃ j < i, pi0 s j))                  : mk_range_le
   ... = prod (λ n : ℕ, #(↥⋃ j < i, pi0 s j))        : mk_pi _
   ... = #(↥⋃ j < i, pi0 s j) ^ aleph_0.{u}          : by { simp [prod_const] }
   ... ≤ #(↥(s ∪ {∅, univ} ∪ ⋃ j < i, compl '' sigma0 s j)) ^ aleph_0.{u} :
