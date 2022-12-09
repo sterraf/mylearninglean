@@ -24,6 +24,18 @@ end
 
 end ordinal
 
+open set
+
+namespace cardinal
+open_locale cardinal
+
+lemma mk_Union_le_of_le {β : Type u} (κ : cardinal) (i : ordinal)
+(hi : i ≤ κ.ord) (hκ : ℵ₀ ≤ κ) (A : ordinal.{u} → set β)
+(hA : ∀ j < i, #↥(A j) ≤ κ) :
+  #(↥⋃ j < i, A j) ≤ κ := sorry
+
+end cardinal
+
 namespace pointclasses
 
 section sigma0_pi0
@@ -385,7 +397,9 @@ open set measurable_space cardinal
 open_locale cardinal
 
 -- Essentially the same results in `measure_theory.card_measurable_space`.
-lemma cardinal_sigma0_le :
+/- The result holds for arbitrary `i`, but it is easier to prove
+this way -/
+lemma cardinal_sigma0_le (hi : i ≤ ordinal.ω₁):
   #(sigma0 s i) ≤ (max (#s) 2) ^ aleph_0.{u} :=
 begin
   induction i using ordinal.induction with i IH,
@@ -410,7 +424,14 @@ begin
   { apply_rules [(mk_union_le _ _).trans, add_le_of_le C, mk_image_le.trans],
     { exact (le_max_left _ _).trans (self_le_power _ one_lt_aleph_0.le) },
     repeat { simp [mk_singleton], exact one_lt_aleph_0.le.trans C } },
-  have K : #(↥⋃ j < i, compl '' sigma0 s j) ≤ (max (#s) 2) ^ aleph_0.{u} := sorry,
+  have K : #(↥⋃ j < i, compl '' sigma0 s j) ≤ (max (#s) 2) ^ aleph_0.{u},
+  { apply mk_Union_le_of_le,
+    exact (hi.trans $ ord_le_ord.mpr B),
+    exact C,
+    intros j hj,
+    rw ← cardcompl,
+    apply IH j hj,
+    exact (le_of_lt $ lt_of_lt_of_le hj hi) },
   have J : #(↥(s ∪ {∅, univ} ∪ ⋃ j < i, compl '' sigma0 s j)) ≤ (max (#s) 2) ^ aleph_0.{u},
     { calc
     #(↥(s ∪ {∅, univ} ∪ ⋃ j < i, compl '' sigma0 s j)) ≤
@@ -435,7 +456,7 @@ begin
 end
 
 theorem cardinal_gen_measurable_le :
-  #(gen_measurable s) ≤ (max (#s) 2) ^ aleph_0.{u} := cardinal_sigma0_le _
+  #(gen_measurable s) ≤ (max (#s) 2) ^ aleph_0.{u} := cardinal_sigma0_le _ (le_refl _)
 
 theorem cardinal_generate_measurable_le :
   #{t | generate_measurable s t} ≤ (max (#s) 2) ^ aleph_0.{u} :=
