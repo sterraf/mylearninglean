@@ -79,3 +79,25 @@ begin
 end
 
 end inductive_generate
+
+namespace cardinal
+
+universes u v 
+
+def equiv_ulift {α β : Type*} (heq : α ≃ β) : (ulift.{u} α) ≃ (ulift.{v} β) :=
+begin
+  cases heq with tofu infu li ri,
+  let ntf := λ (x : ulift.{u} α), ulift.up.{v} (tofu x.down),
+  let nif := λ (x : ulift.{v} β), ulift.up.{u} (infu x.down),
+  have ntfx : ∀x, ntf x = ulift.up.{v} (tofu x.down) := by simp,
+  have nify : ∀y, nif y = ulift.up.{u} (infu y.down) := by simp,
+  have nli : function.left_inverse nif ntf,
+  { intro x,
+    rw [ntfx, nify, li x.down, ulift.up_down] },
+  have nri : function.right_inverse nif ntf,
+  { intro x,
+    rw [ntfx, nify, ri x.down, ulift.up_down] },
+  exact ⟨ntf, nif, nli, nri⟩
+end
+
+end cardinal
