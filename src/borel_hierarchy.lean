@@ -60,23 +60,23 @@ begin
   # (↥⋃ (y : i.out.α), A ↑(i.enum_iso_out.to_equiv.inv_fun y)) ≤ 
     # i.out.α * ⨆ j : i.out.α, # ↥(A ↑(i.enum_iso_out.to_equiv.inv_fun j)) : 
     mk_Union_le _
-    ... = i.card * ⨆ j : i.out.α, # ↥(A ↑(i.enum_iso_out.to_equiv.inv_fun j)) :
-      by { rw mk_ordinal_out }
-    ... ≤ κ * ⨆ j : i.out.α, # ↥(A ↑(i.enum_iso_out.to_equiv.inv_fun j)) : 
-      mul_le_mul (card_le_of_le_ord hi) (le_refl _) (zero_le _) (zero_le κ)
-    ... ≤ κ * κ : by 
-      { apply mul_le_mul (le_refl κ) _ (zero_le _) (zero_le κ),
-        rw ← lift_id (supr _), 
-        apply lift_supr_le,
-        { use κ,
-        rintro x ⟨w, rfl⟩,
-        refine hA _ _,
-        exact (i.enum_iso_out.to_equiv.inv_fun w).property },
-        intro j,
-        rw lift_id,
-        apply hA, 
-        exact (i.enum_iso_out.to_equiv.inv_fun j).property }
-    ... = κ : mul_eq_self hκ
+  ... = i.card * ⨆ j : i.out.α, # ↥(A ↑(i.enum_iso_out.to_equiv.inv_fun j)) :
+    by { rw mk_ordinal_out }
+  ... ≤ κ * ⨆ j : i.out.α, # ↥(A ↑(i.enum_iso_out.to_equiv.inv_fun j)) : 
+    mul_le_mul (card_le_of_le_ord hi) (le_refl _) (zero_le _) (zero_le κ)
+  ... ≤ κ * κ : by 
+  { apply mul_le_mul (le_refl κ) _ (zero_le _) (zero_le κ),
+    rw ← lift_id (supr _), 
+    apply lift_supr_le,
+    { use κ,
+    rintro x ⟨w, rfl⟩,
+    refine hA _ _,
+    exact (i.enum_iso_out.to_equiv.inv_fun w).property },
+    intro j,
+    rw lift_id,
+    apply hA, 
+    exact (i.enum_iso_out.to_equiv.inv_fun j).property }
+  ... = κ : mul_eq_self hκ
 end
 
 /-
