@@ -112,7 +112,7 @@ inductive sigma0_pi0_rec {α : Type u} (s : set (set α)) :
 | compl {i x}   : sigma0_pi0_rec i ff x → sigma0_pi0_rec i tt xᶜ
 | union {i} (f : ℕ → set α) (g : ℕ → ordinal.{u}) :
     (∀ n, g n < i) → (∀ n, sigma0_pi0_rec (g n) tt (f n)) → sigma0_pi0_rec i ff (⋃ n, f n)
- 
+
 def sigma0 : set (set α) := sigma0_pi0_rec i ff
 
 def pi0 : set (set α) := sigma0_pi0_rec i tt
@@ -205,33 +205,43 @@ begin
     exacts [sigma0_pi0_rec.empty, sigma0_pi0_rec.univ, sigma0_pi0_rec.basic x x_in_s] }
 end
 
-/-
--- TODO
 lemma sigma0_one :
   sigma0 1 = set.range (λ (f : ℕ → s ∪ {∅,univ}), ⋃ n, (f n).1) :=
 begin
-  unfold sigma0 sigma0_pi0_rec, simp,
+  unfold sigma0, simp,
   ext z, simp,
-  refine ⟨λ h, _, λ h, _⟩;
-  rcases h with ⟨f,hf⟩,
-  { have f_in_s : ∀ n, ↑(f n) ∈ s ∪ {∅,univ},
-    intro n,
-    rcases (mem_Union.mp (f n).property) with ⟨j,hf⟩,
-    { rw ordinal.lt_one_iff_zero at hf,
-      simp at hf,
-      simp_rw [hf.left,sigma0_pi0_rec_def',pi0_zero] at hf,
-      exact hf.right },
-    { use (λn, ⟨f n, f_in_s n⟩ : ℕ → ↥(s ∪ {∅, univ})),
-      exact hf } },
-  { have Un_eq_s : (⋃ (j < 1), (sigma0_pi0_rec s j).snd) = s ∪ {∅, univ},
-    { simp [ordinal.lt_one_iff_zero, sigma0_pi0_rec_def', pi0_zero] },
-    have f_in_s : ∀ n, ↑(f n) ∈ s ∪ {∅, univ} := λn, (f n).property,
-    have f_in_Un : ∀ n, ↑(f n) ∈ (⋃ (j < 1), (sigma0_pi0_rec s j).snd),
-    { finish },
-    use (λn, ⟨f n, f_in_Un n⟩ : ℕ → ↥(⋃ (j < 1), (sigma0_pi0_rec s j).snd)),
-    simp [hf] }
+  refine ⟨λ h, _, λ h, _⟩,
+  swap,
+  { rcases h with ⟨f,rfl⟩,
+    apply sigma0_pi0_rec.union (λ n, (f n).val) (λ n, 0),
+    { simp },
+    { simp,
+      intro n,
+      have hfn := (f n).property,
+      simp at hfn,
+      rcases hfn with nul | uni | bas,
+      { rw nul, exact sigma0_pi0_rec.empty },
+      { rw uni, exact sigma0_pi0_rec.univ },
+      { exact sigma0_pi0_rec.basic (f n) bas } } },
+  { set o := (1 : ordinal) with ho,
+    replace h : sigma0_pi0_rec o ff z,
+    { tauto },
+    clear_value o,
+    cases h with _ _ _ _ _ _ f g glt hf,
+    subst ho,
+    have gnul : ∀ n, g n = 0,
+    { exact λ n, ordinal.lt_one_iff_zero.mp (glt n) },
+    simp_rw gnul at hf,
+    have sigtt0 : ∀ n, f n ∈ (s ∪ {∅, univ}),
+    { have := pi0_zero s,
+      unfold pi0 at this,
+      rw this at hf, 
+      exact hf },
+    use λ n, ⟨f n, sigtt0 n⟩,
+    simp,
+    ext x, split; intro hx,
+    exacts [mem_Union.mp hx, mem_Union.mpr hx] }
 end
--/
 
 lemma sigma0_subset_sigma0 (hik : i ≤ k) :
   sigma0 i ⊆ sigma0 k :=
