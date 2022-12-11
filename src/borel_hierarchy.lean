@@ -1,6 +1,7 @@
 import set_theory.cardinal.cofinality
 import measure_theory.measurable_space_def
 import set_theory.cardinal.continuum
+import tactic.induction
 
 universe u 
 
@@ -93,8 +94,7 @@ section sigma0_pi0
 
 open set
 
-parameters {α : Type u} (s : set (set α))
-variables (i k : ordinal.{u})
+variables {α : Type u} (s : set (set α)) (i k : ordinal.{u})
 
 /--
 Simultaneous recursive definition of Σ⁰ᵢ and Π⁰ᵢ pointclasses by recursion
@@ -113,17 +113,17 @@ inductive sigma0_pi0_rec {α : Type u} (s : set (set α)) :
 | union {i} (f : ℕ → set α) (g : ℕ → ordinal.{u}) :
     (∀ n, g n < i) → (∀ n, sigma0_pi0_rec (g n) tt (f n)) → sigma0_pi0_rec i ff (⋃ n, f n)
 
-def sigma0 : set (set α) := sigma0_pi0_rec i ff
+def sigma0 : set (set α) := sigma0_pi0_rec s i ff
 
-def pi0 : set (set α) := sigma0_pi0_rec i tt
+def pi0 : set (set α) := sigma0_pi0_rec s i tt
 
 lemma sigma0_pi0_rec_def' {b : bool} :
-  sigma0_pi0_rec i b = if b then pi0 i else sigma0 i :=
+  sigma0_pi0_rec s i b = if b then pi0 s i else sigma0 s i :=
 by { unfold pi0 sigma0, cases b; refl }
 
 @[simp]
 lemma sigma0_zero :
-  sigma0 0 = ∅ :=
+  sigma0 s 0 = ∅ :=
 begin
   unfold sigma0,
   ext x, simp,
@@ -133,7 +133,7 @@ begin
  end
  
 lemma sigma0_eq_Union_pi0:
-  sigma0 i = set.range (λ (f : ℕ → ⋃ j (hij : j < i), pi0 j), ⋃ n, (f n).1) :=
+  sigma0 s i = set.range (λ (f : ℕ → ⋃ j (hij : j < i), pi0 s j), ⋃ n, (f n).1) :=
 begin
   rcases classical.em (i=0) with rfl | hi;
   unfold sigma0,
@@ -162,7 +162,7 @@ begin
 end
 
 lemma pi0_subset_sigma0 (hik : i < k) :
-  pi0 i ⊆ sigma0 k :=
+  pi0 s i ⊆ sigma0 s k :=
 begin
   simp only [sigma0_eq_Union_pi0,hik],
   intros x hx,
@@ -176,7 +176,7 @@ begin
 end
 
 lemma pi0_eq_compl_sigma0 (hi : ¬i = 0):
-  pi0 i = compl '' sigma0 i :=
+  pi0 s i = compl '' sigma0 s i :=
 begin
   unfold sigma0 pi0,
   ext x, split; intro hx; cases hx with hcomp IH c d IH,
@@ -190,7 +190,7 @@ begin
 end  
 
 lemma pi0_zero :
-  pi0 0 = s ∪ {∅,univ} :=
+  pi0 s 0 = s ∪ {∅,univ} :=
 begin
   unfold pi0, ext, simp, split; intro hx,
   { cases hx with _ hx _ v hv,
@@ -206,30 +206,20 @@ begin
 end
 
 lemma sigma0_one :
-  sigma0 1 = set.range (λ (f : ℕ → s ∪ {∅,univ}), ⋃ n, (f n).1) :=
+  sigma0 s 1 = set.range (λ (f : ℕ → s ∪ {∅,univ}), ⋃ n, (f n).1) :=
 begin
   unfold sigma0, simp,
   ext z, simp,
   refine ⟨λ h, _, λ h, _⟩,
-  { set o := (1 : ordinal) with ho,
-    replace h : sigma0_pi0_rec o ff z,
-    { tauto },
-    clear_value o,
-    cases h with _ _ _ _ _ _ f g glt hf,
-    subst ho,
-    have gnul : ∀ n, g n = 0,
-    { exact λ n, ordinal.lt_one_iff_zero.mp (glt n) },
-    simp_rw gnul at hf,
-    have sigtt0 : ∀ n, f n ∈ (s ∪ {∅, univ}),
-    { have := pi0_zero s,
-      unfold pi0 at this,
-      rw this at hf, 
-      exact hf },
-    use λ n, ⟨f n, sigtt0 n⟩,
-    simp,
-    ext x, split; intro hx,
-    exacts [mem_Union.mp hx, mem_Union.mpr hx] },
-    { rcases h with ⟨f,rfl⟩,
+  { -- Subgoal solved by Junyan Xu.
+    induction' h,
+    simp_rw ordinal.lt_one_iff_zero at h_1,
+    simp_rw h_1 at h,
+    change ∀ n, f n ∈ pi0 s 0 at h,
+    simp_rw pi0_zero at h,
+    use λ n, ⟨f n, h n⟩,
+    exact rfl },
+  { rcases h with ⟨f,rfl⟩,
     apply sigma0_pi0_rec.union (λ n, (f n).val) (λ n, 0),
     { simp },
     { simp,
@@ -239,11 +229,11 @@ begin
       rcases hfn with nul | uni | bas,
       { rw nul, exact sigma0_pi0_rec.empty },
       { rw uni, exact sigma0_pi0_rec.univ },
-      { exact sigma0_pi0_rec.basic (f n) bas } } },
+      { exact sigma0_pi0_rec.basic (f n) bas } } }
 end
 
 lemma sigma0_subset_sigma0 (hik : i ≤ k) :
-  sigma0 i ⊆ sigma0 k :=
+  sigma0 s i ⊆ sigma0 s k :=
 begin
   rw le_iff_lt_or_eq at hik,
   cases hik,
@@ -279,7 +269,7 @@ not closed. If the underlying space is zero-dimensional, one can take a basis
 of clopen sets and the inclusion will hold unconditionally. 
 -/
 lemma pi0_subset_pi0 (hi : ¬i = 0) (hik : i ≤ k) :
-  pi0 i ⊆ pi0 k :=
+  pi0 s i ⊆ pi0 s k :=
 begin
   rw [pi0_eq_compl_sigma0,pi0_eq_compl_sigma0],
   exacts [image_subset _ (sigma0_subset_sigma0 s i k hik),
@@ -287,8 +277,8 @@ begin
     hi]
 end
 
-lemma Union_of_sigma0_sequence {g : ℕ → sigma0 i} :
-  (⋃ n, (g n).val) ∈ sigma0 i :=
+lemma Union_of_sigma0_sequence {g : ℕ → sigma0 s i} :
+  (⋃ n, (g n).val) ∈ sigma0 s i :=
 begin
   have hg : ∀ n : ℕ, (g n).val ∈ sigma0 s i := λ n, (g n).property,
   simp [sigma0_eq_Union_pi0] at *,
@@ -317,12 +307,12 @@ begin
     exact hk }
 end
 
-lemma Union_of_mem_sigma0 {f : ℕ → set α} (hf : ∀ n, f n ∈ sigma0 i):
-  (⋃ n, f n) ∈ sigma0 i :=
+lemma Union_of_mem_sigma0 {f : ℕ → set α} (hf : ∀ n, f n ∈ sigma0 s i):
+  (⋃ n, f n) ∈ sigma0 s i :=
 by exact @Union_of_sigma0_sequence _ s i (λn, {val := f n, property := hf n} : ℕ → sigma0 s i)
 
 lemma self_subset_sigma0 (hi : ¬i = 0) :
-  s ⊆ sigma0 i :=
+  s ⊆ sigma0 s i :=
 begin
   calc
   s   ⊆ s ∪ {∅,univ} : subset_union_left _ _
@@ -331,7 +321,7 @@ begin
 end
 
 theorem empty_mem_sigma0 (hi : ¬i = 0) :
-  ∅ ∈ sigma0 i :=
+  ∅ ∈ sigma0 s i :=
 begin
   have : ∅ ∈ s ∪ {∅,univ} := by { apply mem_union_right, simp },
   have that : s ∪ {∅,univ} = pi0 s 0 := eq.symm (pi0_zero s),
@@ -345,8 +335,7 @@ end sigma0_pi0
 
 section gen_measurable
 
-parameters {α : Type u} (s : set (set α))
-variables (i k : ordinal.{u})
+variables {α : Type u} (s : set (set α)) (i k : ordinal.{u})
 
 open set ordinal cardinal
 
@@ -388,7 +377,7 @@ of the `sigma0` hierarchy.
 def gen_measurable := sigma0 s ω₁
 
 lemma gen_measurable_eq_Union_sigma0 :
-  gen_measurable = ⋃ (j < ω₁), sigma0 s j :=
+  gen_measurable s = ⋃ (j < ω₁), sigma0 s j :=
 begin
   unfold gen_measurable,
   apply subset_antisymm,
@@ -415,8 +404,8 @@ begin
     exact λ _ hi, sigma0_subset_sigma0 s _ _ (le_of_lt hi) }
 end 
 
-theorem compl_mem_gen_measurable (t : set α) (ht : t ∈ gen_measurable) :
-  tᶜ ∈ gen_measurable :=
+theorem compl_mem_gen_measurable (t : set α) (ht : t ∈ gen_measurable s) :
+  tᶜ ∈ gen_measurable s :=
 begin
   rw gen_measurable_eq_Union_sigma0 at ht,
   simp at ht,
@@ -428,8 +417,8 @@ begin
   ... ⊆ gen_measurable s : pi0_subset_sigma0 s o ω₁ ho.1,
 end
 
-theorem Union_mem_gen_measurable {f : ℕ → set α} (hf : ∀ n, f n ∈ gen_measurable) :
-  (⋃ n, f n) ∈ gen_measurable :=
+theorem Union_mem_gen_measurable {f : ℕ → set α} (hf : ∀ n, f n ∈ gen_measurable s) :
+  (⋃ n, f n) ∈ gen_measurable s:=
 by { unfold gen_measurable at *, exact Union_of_mem_sigma0 s ω₁ hf }
 
 open measurable_space
@@ -467,7 +456,7 @@ begin
 end
 
 theorem generate_measurable_eq_gen_measurable :
-  {t | generate_measurable s t} = gen_measurable :=
+  {t | generate_measurable s t} = gen_measurable s :=
 begin
   ext t, refine ⟨λ ht, _, λ ht, _⟩,
   { induction ht with u hu u hu IH f hf IH,
