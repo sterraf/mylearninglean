@@ -103,32 +103,48 @@ on ordinals (a variant of 11.B in Kechris, _Classical Descriptive Set Theory_).
 The main difference is that the hierarchy starts at level 0: Π⁰₀ are intended to
 be basic open sets (augmented with `∅` and `univ`) and Σ⁰₀ is the empty family.
 -/
-@[protected]
-def sigma0_pi0_rec : ordinal.{u} → set (set α) × set (set α)
-| i :=
-    let 
-      P_old := ⋃ j (hij : j < i), (sigma0_pi0_rec j).snd,
-      S := if i = 0 then ∅ else set.range (λ (f : ℕ → P_old), ⋃ n, (f n).1),
-      P := if i = 0 then s ∪ {∅,univ} else compl '' S
-    in
-      ⟨S , P⟩
-using_well_founded {dec_tac := `[exact hij]}
 
-def sigma0 (i : ordinal.{u}) : set (set α) := (sigma0_pi0_rec i).fst
+inductive sigma0_pi0_rec {α : Type u} (s : set (set α)) :
+  ordinal.{u} → bool → set α → Prop
+| basic (x ∈ s) : sigma0_pi0_rec 0 tt x
+| empty         : sigma0_pi0_rec 0 tt ∅
+| univ          : sigma0_pi0_rec 0 tt set.univ
+| compl {i x}   : sigma0_pi0_rec i ff x → sigma0_pi0_rec i tt xᶜ
+| union {i} (f : ℕ → set α) (g : ℕ → ordinal.{u}) :
+    (∀ n, g n < i) → (∀ n, sigma0_pi0_rec (g n) tt (f n)) → sigma0_pi0_rec i ff (⋃ n, f n)
+ 
+def sigma0 : set (set α) := sigma0_pi0_rec i ff
 
-def pi0 : set (set α) := (sigma0_pi0_rec i).snd
+def pi0 : set (set α) := sigma0_pi0_rec i tt
 
-lemma sigma0_pi0_rec_def' :
-  sigma0_pi0_rec i = ⟨sigma0 i, pi0 i⟩ :=
-by { unfold pi0 sigma0, simp } -- without the enveloping namespace, `unfold` fails
+lemma sigma0_pi0_rec_def' {b : bool} :
+  sigma0_pi0_rec i b = if b then pi0 i else sigma0 i :=
+by { unfold pi0 sigma0, cases b; refl }
+
+@[simp]
+lemma sigma0_zero :
+  sigma0 0 = ∅ :=
+begin
+  unfold sigma0,
+  ext x, simp,
+  intro hx,
+  cases hx with _ _ _ _ _ _ f g glt hf,
+  exact ordinal.not_lt_zero (g 0) (glt 0)
+ end
 
 lemma sigma0_eq_Union_pi0:
   sigma0 i = set.range (λ (f : ℕ → ⋃ j (hij : j < i), pi0 j), ⋃ n, (f n).1) :=
 begin
   rcases classical.em (i=0) with rfl | hi;
-  unfold sigma0 sigma0_pi0_rec,
+  unfold sigma0,
+  rw sigma0_pi0_rec_def',
   { apply eq.symm, simp [range_eq_empty, ordinal.not_lt_zero] },
-  { simp [hi], congr }
+  { simp [hi],
+    ext x, split; intro hx,
+    { cases hx with _ _ _ _ _ _ f g glt hf,
+      sorry },
+    { sorry }
+     }
 end
 
 lemma pi0_subset_sigma0 (hik : i < k) :
@@ -147,17 +163,36 @@ end
 
 lemma pi0_eq_compl_sigma0 (hi : ¬i = 0):
   pi0 i = compl '' sigma0 i :=
-by { unfold sigma0 pi0 sigma0_pi0_rec, simp [hi] }
-
-@[simp]
-lemma sigma0_zero :
-  sigma0 0 = ∅ :=
-by { unfold sigma0 sigma0_pi0_rec, simp }
+begin
+  unfold sigma0 pi0,
+  ext x, split; intro hx; cases hx with hcomp IH c d IH,
+  { contradiction },
+  { contradiction },
+  { contradiction },
+  { simp, use d, tauto },
+  { have := sigma0_pi0_rec.compl IH.1,
+    rw ← IH.2,
+    assumption }
+end  
 
 lemma pi0_zero :
   pi0 0 = s ∪ {∅,univ} :=
-by { unfold pi0 sigma0_pi0_rec, simp }
+begin
+  unfold pi0, ext, simp, split; intro hx,
+  { cases hx with _ hx _ v hv,
+    any_goals { tauto },
+    simp [sigma0_pi0_rec_def'] at hv,
+    have : sigma0 s 0 v,
+    { exact hv },
+    exfalso,
+    rw sigma0_zero at this,
+    exact this },
+  { rcases hx with rfl | rfl | x_in_s,
+    exacts [sigma0_pi0_rec.empty, sigma0_pi0_rec.univ, sigma0_pi0_rec.basic x x_in_s] }
+end
 
+/-
+-- TODO
 lemma sigma0_one :
   sigma0 1 = set.range (λ (f : ℕ → s ∪ {∅,univ}), ⋃ n, (f n).1) :=
 begin
@@ -182,6 +217,7 @@ begin
     use (λn, ⟨f n, f_in_Un n⟩ : ℕ → ↥(⋃ (j < 1), (sigma0_pi0_rec s j).snd)),
     simp [hf] }
 end
+-/
 
 lemma sigma0_subset_sigma0 (hik : i ≤ k) :
   sigma0 i ⊆ sigma0 k :=
