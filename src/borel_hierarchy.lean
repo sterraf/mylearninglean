@@ -131,7 +131,7 @@ begin
   cases hx with _ _ _ _ _ _ f g glt hf,
   exact ordinal.not_lt_zero (g 0) (glt 0)
  end
-
+ 
 lemma sigma0_eq_Union_pi0:
   sigma0 i = set.range (λ (f : ℕ → ⋃ j (hij : j < i), pi0 j), ⋃ n, (f n).1) :=
 begin
@@ -142,9 +142,23 @@ begin
   { simp [hi],
     ext x, split; intro hx,
     { cases hx with _ _ _ _ _ _ f g glt hf,
-      sorry },
-    { sorry }
-     }
+      existsi λn, (⟨f n, _⟩ : ↥⋃ j < i, pi0 s j),
+      swap, 
+      { simp,
+        use g n,
+        exact ⟨glt n, hf n⟩ },
+      simp,
+      ext x, split; intro hx,
+      exacts [mem_Union.mp hx, mem_Union.mpr hx] },
+    { cases hx with f hf,
+      rw ← hf,
+      simp at hf,
+      choose g hg using λn, (mem_Union.mp (f n).property),
+      simp at hg,
+      apply sigma0_pi0_rec.union _ g,
+      exact λ n, (hg n).1,
+      unfold pi0 at hg,
+      exact λ n, (hg n).2 } }
 end
 
 lemma pi0_subset_sigma0 (hik : i < k) :
