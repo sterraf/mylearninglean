@@ -150,10 +150,11 @@ end including_omitting
 example : ex2d = (5 : ℕ) := rfl -- Here too
 
 -- Useful tracing for turning non-terminal `simp`s into `simp only`s:
-set_option trace.simplify true
+set_option trace.simplify.rewrite true
 set_option trace.simplify.failure false
 set_option trace.simplify.rewrite_failure false
 -- Accompanying terminal (xD) script. End input with Ctrl-D.
 /-
-sed -e "s/.*\\[simplify.rewrite\\] \\[\([^[]*\)]:.*/\\1,/g" -e "s/set\\.//g" -e "s/^  .*//g" | grep -v "^$"
+echo [`sed  -e "s/.*\\[simplify.rewrite\\] \\[\([^[]*\)]:.*/\\1/g" -e "s/set\\.//g" -e "s/^  .*//g"  | grep -v "^$" | sort | uniq | tr '\\n' ',' && printf \\\\b`]
 -/
+-- ... though it seems to be already done in lean :facepalm:
