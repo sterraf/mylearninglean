@@ -103,12 +103,11 @@ on ordinals (a variant of 11.B in Kechris, _Classical Descriptive Set Theory_).
 The main difference is that the hierarchy starts at level 0: Π⁰₀ are intended to
 be basic open sets (augmented with `∅` and `univ`) and Σ⁰₀ is the empty family.
 -/
-
 inductive sigma0_pi0_rec {α : Type u} (s : set (set α)) :
   ordinal.{u} → bool → set α → Prop
 | basic (x ∈ s) : sigma0_pi0_rec 0 tt x
 | empty         : sigma0_pi0_rec 0 tt ∅
-| univ          : sigma0_pi0_rec 0 tt set.univ
+| univ          : sigma0_pi0_rec 0 tt univ
 | compl {i x}   : sigma0_pi0_rec i ff x → sigma0_pi0_rec i tt xᶜ
 | union {i} (f : ℕ → set α) (g : ℕ → ordinal.{u}) :
     (∀ n, g n < i) → (∀ n, sigma0_pi0_rec (g n) tt (f n)) → sigma0_pi0_rec i ff (⋃ n, f n)
@@ -126,12 +125,12 @@ lemma sigma0_zero :
   sigma0 s 0 = ∅ :=
 begin
   unfold sigma0,
-  ext x, simp,
+  ext x, simp only [mem_empty_eq,iff_false],
   intro hx,
   cases hx with _ _ _ _ _ _ f g glt hf,
   exact ordinal.not_lt_zero (g 0) (glt 0)
  end
- 
+
 lemma sigma0_eq_Union_pi0:
   sigma0 s i = set.range (λ (f : ℕ → ⋃ j (hij : j < i), pi0 s j), ⋃ n, (f n).1) :=
 begin
@@ -139,22 +138,21 @@ begin
   unfold sigma0,
   rw sigma0_pi0_rec_def',
   { apply eq.symm, simp [range_eq_empty, ordinal.not_lt_zero] },
-  { simp [hi],
-    ext x, split; intro hx,
+  { ext x, split; intro hx,
     { cases hx with _ _ _ _ _ _ f g glt hf,
       existsi λn, (⟨f n, _⟩ : ↥⋃ j < i, pi0 s j),
-      swap, 
-      { simp,
-        use g n,
-        exact ⟨glt n, hf n⟩ },
-      simp,
-      ext x, split; intro hx,
-      exacts [mem_Union.mp hx, mem_Union.mpr hx] },
+      { simp only [mem_Union,exists_prop,mem_range,exists_exists_eq_and],
+        ext x, split; intro hx,
+        exacts [mem_Union.mp hx, mem_Union.mpr hx] },
+      { rw mem_Union,
+      use g n,
+      rw mem_Union,
+      exact ⟨glt n, hf n⟩ } },
     { cases hx with f hf,
       rw ← hf,
-      simp at hf,
+      dsimp only at hf,
       choose g hg using λn, (mem_Union.mp (f n).property),
-      simp at hg,
+      simp only [mem_Union,exists_prop] at hg,
       apply sigma0_pi0_rec.union _ g,
       exact λ n, (hg n).1,
       unfold pi0 at hg,
@@ -168,7 +166,7 @@ begin
   intros x hx,
   apply mem_range.mpr,
   have hxU : x ∈ ⋃ j < k, pi0 s j,
-  { simp,
+  { simp only [mem_Union,exists_prop],
     use i,
     exact ⟨hik,hx⟩ },
   existsi (λn : ℕ, (⟨x,hxU⟩ : ⋃ (j < k), pi0 s j)),
@@ -183,7 +181,7 @@ begin
   { contradiction },
   { contradiction },
   { contradiction },
-  { simp, use d, tauto },
+  { simp only [mem_image], use d, tauto },
   { have := sigma0_pi0_rec.compl IH.1,
     rw ← IH.2,
     assumption }
@@ -192,10 +190,12 @@ end
 lemma pi0_zero :
   pi0 s 0 = s ∪ {∅,univ} :=
 begin
-  unfold pi0, ext, simp, split; intro hx,
+  unfold pi0, ext,
+  simp only [mem_insert_iff,union_insert,union_singleton],
+  split; intro hx,
   { cases hx with _ hx _ v hv,
     any_goals { tauto },
-    simp [sigma0_pi0_rec_def'] at hv,
+    simp only [sigma0_pi0_rec_def'] at hv,
     have : sigma0 s 0 v,
     { exact hv },
     exfalso,
@@ -208,8 +208,10 @@ end
 lemma sigma0_one :
   sigma0 s 1 = set.range (λ (f : ℕ → s ∪ {∅,univ}), ⋃ n, (f n).1) :=
 begin
-  unfold sigma0, simp,
-  ext z, simp,
+  unfold sigma0,
+  change sigma0_pi0_rec s 1 ff = range (λ (f : ℕ → ↥(s ∪ {∅, univ})), ⋃ (n : ℕ), ↑(f n)),
+  ext z,
+  change sigma0_pi0_rec s 1 ff z ↔ ∃ (y : ℕ → ↥(s ∪ {∅, univ})), (⋃ (n : ℕ), ↑(y n)) = z,
   refine ⟨λ h, _, λ h, _⟩,
   { -- Subgoal solved by Junyan Xu.
     induction' h with _ _ _ _ _ _ _ f g glt1 IH f_Union,
@@ -222,10 +224,10 @@ begin
   { rcases h with ⟨f,rfl⟩,
     apply sigma0_pi0_rec.union (λ n, (f n).val) (λ n, 0),
     { simp },
-    { simp,
+    { change ∀ (n : ℕ), sigma0_pi0_rec s 0 tt ↑(f n),
       intro n,
       have hfn := (f n).property,
-      simp at hfn,
+      simp only [subtype.val_eq_coe,mem_insert_iff,union_insert,union_singleton] at hfn,
       rcases hfn with nul | uni | bas,
       { rw nul, exact sigma0_pi0_rec.empty },
       { rw uni, exact sigma0_pi0_rec.univ },
@@ -239,7 +241,7 @@ begin
   cases hik,
   -- Take care of the trivial case `i = k` first,
   swap,
-  { simp [hik, subset_rfl] },
+  { simp only [hik, subset_rfl] },
   -- Now the interesting `i < k`:
   repeat { rw sigma0_eq_Union_pi0 },
   intros x hx,
@@ -281,22 +283,21 @@ lemma Union_of_sigma0_sequence {g : ℕ → sigma0 s i} :
   (⋃ n, (g n).val) ∈ sigma0 s i :=
 begin
   have hg : ∀ n : ℕ, (g n).val ∈ sigma0 s i := λ n, (g n).property,
-  simp [sigma0_eq_Union_pi0] at *,
+  simp only [subtype.val_eq_coe,sigma0_eq_Union_pi0] at *,
   choose o ho using hg,
   have : ℕ × ℕ ≃ ℕ,
   { exact denumerable.eqv (ℕ × ℕ) },
   cases this with tup untup htup huntup,
   use λ n, let p := (untup n) in o p.1 p.2,
-  ext x, split; intro hx; simp at *;
+  ext x, split; intro hx; simp only [mem_Union] at hx ⊢;
   cases hx with j hxin,
   { let n := (untup j).fst,
     use n,
     specialize ho n,
-    rw ← ho,
-    simp,
+    rw [← ho, mem_Union],
     use (untup j).snd,
     assumption },
-  { simp [← ho j] at hxin,
+  { simp only [mem_Union,← ho j] at hxin,
     cases hxin with k hk,
     existsi tup ⟨j,k⟩,
     have fstj : (untup (tup ⟨j,k⟩)).fst = j,
@@ -343,7 +344,7 @@ lemma sup_sequence_lt_omega1 (o : ℕ → ordinal.{u}) (ho : ∀ n, o n < ω₁)
   sup o < ω₁ :=
 begin
   apply sup_lt_ord_lift _ ho,
-  simp,
+  simp only [mk_denumerable,lift_aleph_0],
   rw [cardinal.is_regular_aleph_one.cof_eq],
   exact aleph_0_lt_aleph_one,
 end
@@ -383,16 +384,16 @@ begin
   apply subset_antisymm,
   { rw sigma0_eq_Union_pi0,
     intros x hx,
-    simp at *,
+    simp only [mem_Union,exists_prop] at *,
     cases hx with f hf,
     let g := λ n, (f n).property,
-    simp at g,
+    simp only [mem_Union,exists_prop] at g,
     choose o ho using g,
     use order.succ(sup o),
     split,
     { exact is_limit.succ_lt is_limit_omega1 (sup_sequence_lt_omega1 o (λ n, (ho n).left)) },
     rw sigma0_eq_Union_pi0,
-    simp,
+    rw mem_range,
     have typf : ∀ n, ↑(f n) ∈ ⋃ (j < order.succ (sup o)), pi0 s j,
     { intro n, apply mem_Union.2,
       specialize ho n,
@@ -400,7 +401,7 @@ begin
       exact mem_Union.2 ⟨lt_of_le_of_lt (le_sup o n) (order.lt_succ (sup o)), ho.2⟩ },
     use λ n, (⟨f n, typf n⟩ : ⋃ (j < order.succ (sup o)), pi0 s j),
     tauto },
-  { simp,
+  { simp only [Union_subset_iff],
     exact λ _ hi, sigma0_subset_sigma0 s _ _ (le_of_lt hi) }
 end 
 
@@ -408,12 +409,13 @@ theorem compl_mem_gen_measurable (t : set α) (ht : t ∈ gen_measurable s) :
   tᶜ ∈ gen_measurable s :=
 begin
   rw gen_measurable_eq_Union_sigma0 at ht,
-  simp at ht,
+  simp only [mem_Union,exists_prop] at ht,
   cases ht with o ho,
   rcases classical.em (o=0) with rfl | onon,
   { finish },
   calc
-  tᶜ  ∈ pi0 s o          : by { rw pi0_eq_compl_sigma0, simp, exacts [ho.2,onon] }
+  tᶜ  ∈ pi0 s o          : by { rw pi0_eq_compl_sigma0, 
+    simp only [mem_image,compl_inj_iff,exists_eq_right], exacts [ho.2,onon] }
   ... ⊆ gen_measurable s : pi0_subset_sigma0 s o ω₁ ho.1,
 end
 
@@ -427,13 +429,12 @@ lemma generate_measurable_of_mem_sigma0 (t) (ht : t ∈ sigma0 s i) :
   generate_measurable s t :=
 begin
   induction i using ordinal.induction with i IH generalizing t,
-  rw sigma0_eq_Union_pi0 at ht,
-  simp at ht,
+  rw [sigma0_eq_Union_pi0,mem_range] at ht,
   rcases ht with ⟨f,hf⟩,
   have typf : ∀ n : ℕ, generate_measurable s (f n),
   { intro n,
     have fn_in : (f n).val ∈ ⋃ (j : ordinal) (hij : j < i), pi0 s j := (f n).property,
-    simp at fn_in,
+    simp only [subtype.val_eq_coe,mem_Union,exists_prop] at fn_in,
     rcases fn_in with ⟨o,⟨o_lt_i,fn_in⟩⟩,
     -- Case `(f n).val ∈ pi0 s 0`.
     rcases classical.em (o=0) with rfl | honz,
@@ -441,10 +442,10 @@ begin
       rcases fn_in with  fn_in | fn_emp | fn_in,
       { exact generate_measurable.basic _ fn_in },
       { rw fn_emp, exact generate_measurable.empty },
-      { simp at fn_in, rw [fn_in,←compl_empty],
+      { rw mem_singleton_iff at fn_in, rw [fn_in,←compl_empty],
         exact generate_measurable.compl _ generate_measurable.empty } },
     -- Case `(f n).val ∈ pi0 s o` with `o ≠ 0`.
-    simp at IH,
+    simp only at IH,
     rw pi0_eq_compl_sigma0 s o honz at fn_in,
     rw ← compl_compl ↑(f n),
     apply generate_measurable.compl,
@@ -472,8 +473,7 @@ end gen_measurable
 
 section card_gen_measurable
 
-parameters {α : Type u} (s : set (set α))
-variables (i k : ordinal.{u})
+variables {α : Type u} (s : set (set α)) (i k : ordinal.{u})
 
 open set measurable_space cardinal      
 open_locale cardinal
@@ -486,10 +486,11 @@ lemma cardinal_sigma0_le (hi : i ≤ ordinal.ω₁):
 begin
   induction i using ordinal.induction with i IH,
   have Upi0sub : (⋃ j < i, pi0 s j) ⊆ s ∪ {∅, univ} ∪ ⋃ j < i, compl '' sigma0 s j,
-  { simp,
+  { simp only [mem_singleton_iff,union_insert,union_singleton,mem_insert_iff,Union_subset_iff],
     intros j hj x hx,
     rcases classical.em (j=0) with rfl | hjnz,
-    { simp [pi0_zero] at hx, exact mem_union_left _ hx },
+    { simp only [mem_singleton_iff,union_insert,union_singleton,mem_insert_iff,pi0_zero] at hx,
+      exact mem_union_left _ hx },
     rw pi0_eq_compl_sigma0 s j hjnz at hx,
     apply mem_union_right _ (mem_Union.mpr _),
     use j,
@@ -505,7 +506,8 @@ begin
   have L : #(↥(s ∪ {∅, univ})) ≤ (max (#s) 2) ^ aleph_0.{u},
   { apply_rules [(mk_union_le _ _).trans, add_le_of_le C, mk_image_le.trans],
     { exact (le_max_left _ _).trans (self_le_power _ one_lt_aleph_0.le) },
-    repeat { simp [mk_singleton], exact one_lt_aleph_0.le.trans C } },
+    repeat { simp only [mk_fintype,fintype.card_unique,nat.cast_one,mk_singleton],
+      exact one_lt_aleph_0.le.trans C } },
   have K : #(↥⋃ j < i, compl '' sigma0 s j) ≤ (max (#s) 2) ^ aleph_0.{u},
   { apply mk_Union_le_of_le,
     exact (hi.trans $ ord_le_ord.mpr B),
@@ -538,7 +540,7 @@ begin
 end
 
 theorem cardinal_gen_measurable_le :
-  #(gen_measurable s) ≤ (max (#s) 2) ^ aleph_0.{u} := cardinal_sigma0_le _ (le_refl _)
+  #(gen_measurable s) ≤ (max (#s) 2) ^ aleph_0.{u} := cardinal_sigma0_le _ _ (le_refl _)
 
 theorem cardinal_generate_measurable_le :
   #{t | generate_measurable s t} ≤ (max (#s) 2) ^ aleph_0.{u} :=
@@ -549,18 +551,18 @@ end
 
 theorem cardinal_measurable_set_le' :
   #{t | @measurable_set α (generate_from s) t} ≤ (max (#s) 2) ^ aleph_0.{u} :=
-cardinal_generate_measurable_le
+cardinal_generate_measurable_le _
 
 theorem cardinal_generate_measurable_le_continuum (hs : #s ≤ 𝔠) :
   #{t | generate_measurable s t} ≤ 𝔠 :=
-(cardinal_generate_measurable_le).trans begin
+(cardinal_generate_measurable_le _).trans begin
   rw ←continuum_power_aleph_0,
   exact_mod_cast power_le_power_right (max_le hs (nat_lt_continuum 2).le)
 end
 
 theorem cardinal_measurable_set_le_continuum :
   #s ≤ 𝔠 → #{t | @measurable_set α (generate_from s) t} ≤ 𝔠 :=
-cardinal_generate_measurable_le_continuum
+cardinal_generate_measurable_le_continuum _
 
 end card_gen_measurable
 
