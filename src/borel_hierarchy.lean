@@ -72,8 +72,7 @@ Denumerably many elements chosen from a nondecreasing `ω₁`-sequence of sets,
 all lie in one of the sets.
 -/
 lemma bound_omega1_of_increasing_of_sequence {β : Type*} {A : ordinal → set β}
-  {hA : ∀ j k (hjk : j ≤ k), A j ⊆ A k}
-  {f : ℕ → β} (hf : ∀ n, ∃ i, i < ω₁ ∧ f n ∈ A i) :
+  {hA : ∀ j k (hjk : j ≤ k), A j ⊆ A k} {f : ℕ → β} (hf : ∀ n, ∃ i, i < ω₁ ∧ f n ∈ A i) :
   ∃ i (hi : i < ω₁), ∀ n, f n ∈ A i :=
 begin
   choose o ho using hf,
