@@ -1,7 +1,39 @@
+/-
+Copyright (c) 2022 Pedro Sánchez Terraf. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Author: Pedro Sánchez Terraf.
+-/
 import set_theory.cardinal.cofinality
 import measure_theory.measurable_space_def
 import set_theory.cardinal.continuum
 import tactic.induction
+
+/-!
+# The Borel hierarchy
+
+In this file we define recursively define the classical Borel hierarchy of sets.
+It is developed as a purely set-theoretic definition here, and it is used to reprove
+the result on the cardinal bound for σ-algebras, previously formalized by S. Gouëzel.
+
+## Main definitions
+
+- `sigma0_pi0_rec`: Recursive definition of the hierarchy, not intended for direct use.
+- `sigma0`, `pi0` : The classical pointclasses, obtained from `sigma0_pi0_rec`
+using its `bool` argument.
+
+## Implementation notes
+
+Traditionally, pointclasses $\Sigma^0_\alpha$ and $\Pi^0_\alpha$ for positive
+values of the ordinal $\alpha$. Here the definition is extended in such a way that
+$\Sigma^0_0 = \emptyset$ (which results in more generality for some lemmas) and
+$\Pi^0_0$ coincides with the set of generators.
+
+The `inductive` definition of `sigma0_pi0_rec` was suggested by Junyan Xu.
+
+## References
+
+The definition of the hierarchy was extracted from [Kecrhis].
+-/
 
 universe u 
 
@@ -23,11 +55,49 @@ begin
   exact this
 end
 
+lemma sup_sequence_lt_omega1 (o : ℕ → ordinal.{u}) (ho : ∀ n, o n < ω₁):
+  sup o < ω₁ :=
+begin
+  apply sup_lt_ord_lift _ ho,
+  simp only [mk_denumerable,lift_aleph_0],
+  rw [cardinal.is_regular_aleph_one.cof_eq],
+  exact aleph_0_lt_aleph_one,
+end
+
+lemma is_limit_omega1 :
+  ω₁.is_limit := ord_is_limit (aleph_0_le_aleph 1)
+
+/--
+Denumerably many elements chosen from a nondecreasing `ω₁`-sequence of sets,
+all lie in one of the sets.
+-/
+lemma bound_omega1_of_increasing_of_sequence {β : Type*} {A : ordinal → set β}
+  {hA : ∀ j k (hjk : j ≤ k), A j ⊆ A k}
+  {f : ℕ → β} (hf : ∀ n, ∃ i, i < ω₁ ∧ f n ∈ A i) :
+  ∃ i (hi : i < ω₁), ∀ n, f n ∈ A i :=
+begin
+  choose o ho using hf,
+  use sup o,
+  split,
+  { finish [sup_sequence_lt_omega1] },
+  intro n,
+  specialize ho n,
+  specialize hA (o n) (sup o) (le_sup o n),
+  tauto
+end
+
 end ordinal
 
 open set
 
 namespace cardinal
+
+/-!
+### Cardinal operations ranging over ordinals
+
+Results on cardinality of ordinal-indexed families of sets.
+-/
+
 open_locale cardinal
 
 /--
@@ -41,8 +111,8 @@ by { rw ← card_ord κ, exact ordinal.card_le_card hi}
 Bounding the cardinal of an ordinal-indexed union of sets. 
 -/
 lemma mk_Union_le_of_le {β : Type u} {κ : cardinal} {i : ordinal}
-(hi : i ≤ κ.ord) (hκ : ℵ₀ ≤ κ) (A : ordinal.{u} → set β)
-(hA : ∀ j < i, #↥(A j) ≤ κ) :
+  (hi : i ≤ κ.ord) (hκ : ℵ₀ ≤ κ) (A : ordinal.{u} → set β)
+  (hA : ∀ j < i, #↥(A j) ≤ κ) :
   #(↥⋃ j < i, A j) ≤ κ :=
 begin
   have Y : (⋃ j < i, A j) = (⋃ (j : Iio i), A j),
@@ -82,7 +152,8 @@ end
 
 /-
 -- TODO:
-lemma mk_Union_lt_of_lt_cof {β : Type u} (κ : cardinal.{u}) (i : ordinal.{u}) (hi : i < κ.ord.cof.ord) (A : ordinal → set β) (hκ : ∀ j < i, #↥(A j) < κ) :
+lemma mk_Union_lt_of_lt_cof {β : Type u} (κ : cardinal.{u}) (i : ordinal.{u})
+  (hi : i < κ.ord.cof.ord) (A : ordinal → set β) (hκ : ∀ j < i, #↥(A j) < κ) :
   #(↥⋃ j < i, A j) < κ :=
 -/
 
@@ -92,13 +163,18 @@ namespace pointclasses
 
 section sigma0_pi0
 
+/-!
+### Σ and Π pointclasses
+
+This section includes basic definitions and API.
+-/
 open set
 
 variables {α : Type u} (s : set (set α)) (i k : ordinal.{u})
 
 /--
 Simultaneous recursive definition of Σ⁰ᵢ and Π⁰ᵢ pointclasses by recursion
-on ordinals (a variant of 11.B in Kechris, _Classical Descriptive Set Theory_).
+on ordinals (a variant of 11.B in Kechris, [Classical Descriptive Set Theory][Kechris]).
 
 The main difference is that the hierarchy starts at level 0: Π⁰₀ are intended to
 be basic open sets (augmented with `∅` and `univ`) and Σ⁰₀ is the empty family.
@@ -112,8 +188,14 @@ inductive sigma0_pi0_rec {α : Type u} (s : set (set α)) :
 | union {i} (f : ℕ → set α) (g : ℕ → ordinal.{u}) :
     (∀ n, g n < i) → (∀ n, sigma0_pi0_rec (g n) tt (f n)) → sigma0_pi0_rec i ff (⋃ n, f n)
 
+/--
+The family of (boldface) Σ⁰ᵢ pointsets, which are countable unions of Π⁰ⱼ sets (given by the function `pointclasses.pi0` below) of smaller index. 
+-/
 def sigma0 : set (set α) := sigma0_pi0_rec s i ff
 
+/--
+The family of (boldface) Π⁰ᵢ pointsets, which are the complements of Π⁰ᵢ sets (given by the function `pointclasses.sigma0` above). 
+-/
 def pi0 : set (set α) := sigma0_pi0_rec s i tt
 
 lemma sigma0_pi0_rec_def' {b : bool} :
@@ -134,16 +216,13 @@ begin
 lemma sigma0_eq_Union_pi0:
   sigma0 s i = set.range (λ (f : ℕ → ⋃ j (hij : j < i), pi0 s j), ⋃ n, (f n).1) :=
 begin
-  rcases classical.em (i=0) with rfl | hi;
-  unfold sigma0,
-  rw sigma0_pi0_rec_def',
+  rcases classical.em (i=0) with rfl | hi; unfold sigma0, rw sigma0_pi0_rec_def',
   { apply eq.symm, simp [range_eq_empty, ordinal.not_lt_zero] },
   { ext x, split; intro hx,
     { cases hx with _ _ _ _ _ _ f g glt hf,
       existsi λn, (⟨f n, _⟩ : ↥⋃ j < i, pi0 s j),
       { simp only [mem_Union,exists_prop,mem_range,exists_exists_eq_and],
-        ext x, split; intro hx,
-        exacts [mem_Union.mp hx, mem_Union.mpr hx] },
+        ext x, split; intro hx, exacts [mem_Union.mp hx, mem_Union.mpr hx] },
       { rw mem_Union,
       use g n,
       rw mem_Union,
@@ -335,41 +414,12 @@ end
 end sigma0_pi0
 
 section gen_measurable
-
+/-!
+### Generated sigma-algebra by recursion
+-/
 variables {α : Type u} (s : set (set α)) (i k : ordinal.{u})
 
 open set ordinal cardinal
-
-lemma sup_sequence_lt_omega1 (o : ℕ → ordinal.{u}) (ho : ∀ n, o n < ω₁):
-  sup o < ω₁ :=
-begin
-  apply sup_lt_ord_lift _ ho,
-  simp only [mk_denumerable,lift_aleph_0],
-  rw [cardinal.is_regular_aleph_one.cof_eq],
-  exact aleph_0_lt_aleph_one,
-end
-
-lemma is_limit_omega1 :
-  ω₁.is_limit := ord_is_limit (aleph_0_le_aleph 1)
-
-/--
-Denumerably many elements chosen from a nondecreasing `ω₁`-sequence of sets,
-all lie in one of the sets.
--/
-lemma bound_omega1_of_increasing_of_sequence {β : Type*} {A : ordinal → set β}
-  {hA : ∀ j k (hjk : j ≤ k), A j ⊆ A k}
-  {f : ℕ → β} (hf : ∀ n, ∃ i, i < ω₁ ∧ f n ∈ A i) :
-  ∃ i (hi : i < ω₁), ∀ n, f n ∈ A i :=
-begin
-  choose o ho using hf,
-  use sup o,
-  split,
-  { finish [sup_sequence_lt_omega1] },
-  intro n,
-  specialize ho n,
-  specialize hA (o n) (sup o) (le_sup o n),
-  tauto
-end
 
 /--
 The σ-algebra generated by the family `s`. It is obtained at the `ω₁`th level
@@ -465,7 +515,7 @@ begin
     [ self_subset_sigma0 s ω₁ (ω₁.ne_zero_of_out_nonempty) hu,
       empty_mem_sigma0 s ω₁ (ω₁.ne_zero_of_out_nonempty),
       compl_mem_gen_measurable s u IH,
-      Union_mem_gen_measurable s IH ]},
+      Union_mem_gen_measurable s IH ] },
   { exact generate_measurable_of_mem_sigma0 s ω₁ t ht }
 end
 
@@ -473,12 +523,17 @@ end gen_measurable
 
 section card_gen_measurable
 
+/-!
+### Cardinality of sigma-algebras
+
+This section includes the same results (with essentially the same proofs) from `measure_theory.card_measurable_space` by Gouëzel.
+-/
+
 variables {α : Type u} (s : set (set α)) (i k : ordinal.{u})
 
 open set measurable_space cardinal      
 open_locale cardinal
 
--- Essentially the same results in `measure_theory.card_measurable_space`.
 /- The result holds for arbitrary `i`, but it is easier to prove
 this way -/
 lemma cardinal_sigma0_le (hi : i ≤ ordinal.ω₁):
@@ -518,12 +573,12 @@ begin
     exact (le_of_lt $ lt_of_lt_of_le hj hi) },
   have J : #(↥(s ∪ {∅, univ} ∪ ⋃ j < i, compl '' sigma0 s j)) ≤ (max (#s) 2) ^ aleph_0.{u},
     { calc
-    #(↥(s ∪ {∅, univ} ∪ ⋃ j < i, compl '' sigma0 s j)) ≤
-      #(↥(s ∪ {∅, univ})) + #(↥⋃ j < i, compl '' sigma0 s j) : mk_union_le _ _
-    ... ≤ (max (#s) 2) ^ aleph_0.{u} + (max (#s) 2) ^ aleph_0.{u} :
-      (add_le_add (le_refl _) K).trans (add_le_add L (le_refl _))
-    ... = (max (#s) 2) ^ aleph_0.{u} :
-      (add_eq_max C).trans (max_eq_right (le_refl _)) },
+      #(↥(s ∪ {∅, univ} ∪ ⋃ j < i, compl '' sigma0 s j)) ≤
+        #(↥(s ∪ {∅, univ})) + #(↥⋃ j < i, compl '' sigma0 s j) : mk_union_le _ _
+      ... ≤ (max (#s) 2) ^ aleph_0.{u} + (max (#s) 2) ^ aleph_0.{u} :
+        (add_le_add (le_refl _) K).trans (add_le_add L (le_refl _))
+      ... = (max (#s) 2) ^ aleph_0.{u} :
+        (add_eq_max C).trans (max_eq_right (le_refl _)) },
   -- The main calculation:
   calc
   #↥(sigma0 s i) =
