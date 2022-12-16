@@ -43,11 +43,13 @@ open cardinal
 
 /--
 The first uncountable ordinal in type universe `u`.
+You can use the notation `ω₁`.
 -/
-@[reducible]
-noncomputable def ω₁ := (aleph 1 : cardinal.{u}).ord
+noncomputable def omega_1 := (aleph 1 : cardinal.{u}).ord
 
-lemma omega_lt_omega1 :
+notation `ω₁` := omega_1
+
+lemma omega_lt_omega_1 :
   omega < ω₁ :=
 begin
   have := (ord_lt_ord.mpr (aleph_0_lt_aleph_one)),
@@ -55,30 +57,31 @@ begin
   exact this
 end
 
-lemma sup_sequence_lt_omega1 (o : ℕ → ordinal.{u}) (ho : ∀ n, o n < ω₁):
+lemma sup_sequence_lt_omega_1 (o : ℕ → ordinal.{u}) (ho : ∀ n, o n < ω₁):
   sup o < ω₁ :=
 begin
   apply sup_lt_ord_lift _ ho,
   simp only [mk_denumerable,lift_aleph_0],
+  unfold omega_1,
   rw [cardinal.is_regular_aleph_one.cof_eq],
   exact aleph_0_lt_aleph_one,
 end
 
-lemma is_limit_omega1 :
-  ω₁.is_limit := ord_is_limit (aleph_0_le_aleph 1)
+lemma is_limit_omega_1 :
+  omega_1.is_limit := ord_is_limit (aleph_0_le_aleph 1)
 
 /--
 Denumerably many elements chosen from a nondecreasing `ω₁`-sequence of sets,
 all lie in one of the sets.
 -/
-lemma bound_omega1_of_increasing_of_sequence {β : Type*} {A : ordinal → set β}
+lemma bound_omega_1_of_increasing_of_sequence {β : Type*} {A : ordinal → set β}
   {hA : ∀ j k (hjk : j ≤ k), A j ⊆ A k} {f : ℕ → β} (hf : ∀ n, ∃ i, i < ω₁ ∧ f n ∈ A i) :
   ∃ i (hi : i < ω₁), ∀ n, f n ∈ A i :=
 begin
   choose o ho using hf,
   use sup o,
   split,
-  { finish [sup_sequence_lt_omega1] },
+  { finish [sup_sequence_lt_omega_1] },
   intro n,
   specialize ho n,
   specialize hA (o n) (sup o) (le_sup o n),
@@ -438,7 +441,7 @@ begin
     choose o ho using g,
     use order.succ(sup o),
     split,
-    { exact is_limit.succ_lt is_limit_omega1 (sup_sequence_lt_omega1 o (λ n, (ho n).left)) },
+    { exact is_limit.succ_lt is_limit_omega_1 (sup_sequence_lt_omega_1 o (λ n, (ho n).left)) },
     rw sigma0_eq_Union_pi0,
     rw mem_range,
     have typf : ∀ n, ↑(f n) ∈ ⋃ (j < order.succ (sup o)), pi0 s j,
@@ -507,10 +510,12 @@ theorem generate_measurable_eq_gen_measurable :
   {t | generate_measurable s t} = gen_measurable s :=
 begin
   ext t, refine ⟨λ ht, _, λ ht, _⟩,
-  { induction ht with u hu u hu IH f hf IH,
+  { have om1_nonz : ω₁ ≠ 0,
+    { unfold omega_1, exact ne_zero_of_out_nonempty _,},
+    induction ht with u hu u hu IH f hf IH,
     exacts
-    [ self_subset_sigma0 s ω₁ (ω₁.ne_zero_of_out_nonempty) hu,
-      empty_mem_sigma0 s ω₁ (ω₁.ne_zero_of_out_nonempty),
+    [ self_subset_sigma0 s ω₁ om1_nonz hu,
+      empty_mem_sigma0 s ω₁ om1_nonz,
       compl_mem_gen_measurable s u IH,
       Union_mem_gen_measurable s IH ] },
   { exact generate_measurable_of_mem_sigma0 s ω₁ t ht }
@@ -528,12 +533,12 @@ This section includes the same results (with essentially the same proofs) from `
 
 variables {α : Type u} (s : set (set α)) (i k : ordinal.{u})
 
-open set measurable_space cardinal      
+open set measurable_space cardinal ordinal
 open_locale cardinal
 
 /- The result holds for arbitrary `i`, but it is easier to prove
 this way -/
-lemma cardinal_sigma0_le (hi : i ≤ ordinal.ω₁):
+lemma cardinal_sigma0_le (hi : i ≤ ω₁):
   #(sigma0 s i) ≤ (max (#s) 2) ^ aleph_0.{u} :=
 begin
   induction i using ordinal.induction with i IH,
