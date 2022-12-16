@@ -1,0 +1,48 @@
+Theorems to generalize
+======================
+
+The following theorems might admit a useful ordinal-index
+generalization.
+
+Those signaled with 'for universe issues only' have no occurrence of
+`cardinal.mk [ordinal_would_be_here]`
+
+-- cardinal.basic
+cardinal.le_sum -- for universe issues only
+cardinal.sum_add_distrib -- for universe issues only
+cardinal.sum_add_distrib' -- for universe issues only
+cardinal.lift_sum -- for universe issues only
+cardinal.sum_le_sum -- for universe issues only
+cardinal.bdd_above_range -- for universe issues only
+cardinal.supr_le_sum -- for universe issues only
+cardinal.sum_le_supr_lift
+cardinal.sum_le_supr
+cardinal.supr_of_empty -- for universe issues only
+cardinal.prod_const
+cardinal.prod_le_prod -- for universe issues only
+cardinal.prod_eq_zero -- for universe issues only
+cardinal.prod_ne_zero -- for universe issues only
+cardinal.lift_prod
+cardinal.lift_supr -- for universe issues only
+cardinal.to_nat_finset_prod
+cardinal.sum_lt_prod -- for universe issues only
+
+-- ordinal.arithmetic
+ordinal.supr_ord -- for universe issues only
+
+-- cardinal.ordinal
+cardinal.prod_eq_two_power
+
+-- ordinal.cofinality
+ordinal.supr_lt_lift -- for universe issues only
+ordinal.supr_lt -- for universe issues only
+cardinal.supr_lt_lift_of_is_regular
+cardinal.supr_lt_of_is_regular
+cardinal.sum_lt_lift_of_is_regular
+cardinal.sum_lt_of_is_regular
+ordinal.supr_lt_lift
+ordinal.supr_lt
+cardinal.supr_lt_lift_of_is_regular
+cardinal.supr_lt_of_is_regular
+cardinal.sum_lt_lift_of_is_regular
+cardinal.sum_lt_of_is_regular
