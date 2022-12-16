@@ -114,12 +114,10 @@ lemma mk_Union_le_of_le {β : Type u} {κ : cardinal} {i : ordinal}
   (hA : ∀ j < i, #↥(A j) ≤ κ) :
   #(↥⋃ j < i, A j) ≤ κ :=
 begin
-  have Y : (⋃ j < i, A j) = (⋃ (j : Iio i), A j),
-  { simp },
-  have Z : #(↥⋃ j < i, A j) = #(↥⋃ (j : Iio i), A j),
-  { rw Y },
-  rw Z,
-  clear Y Z,
+  have : #(↥⋃ j < i, A j) = #(↥⋃ (j : Iio i), A j),
+  { have : (⋃ j < i, A j) = (⋃ (j : Iio i), A j) := by simp,
+    rw this },
+  rw this, clear this,
   rw Union_congr_of_surjective i.enum_iso_out.to_fun
     i.enum_iso_out.to_equiv.surjective,
   rotate,
@@ -135,17 +133,17 @@ begin
   ... ≤ κ * ⨆ j : i.out.α, # ↥(A ↑(i.enum_iso_out.to_equiv.inv_fun j)) : 
     mul_le_mul (card_le_of_le_ord hi) (le_refl _) (zero_le _) (zero_le κ)
   ... ≤ κ * κ : by 
-  { apply mul_le_mul (le_refl κ) _ (zero_le _) (zero_le κ),
-    rw ← lift_id (supr _), 
-    apply lift_supr_le,
-    { use κ,
-    rintro x ⟨w, rfl⟩,
-    refine hA _ _,
-    exact (i.enum_iso_out.to_equiv.inv_fun w).property },
-    intro j,
-    rw lift_id,
-    apply hA, 
-    exact (i.enum_iso_out.to_equiv.inv_fun j).property }
+    { apply mul_le_mul (le_refl κ) _ (zero_le _) (zero_le κ),
+      rw ← lift_id (supr _), 
+      apply lift_supr_le,
+      { use κ,
+      rintro x ⟨w, rfl⟩,
+      refine hA _ _,
+      exact (i.enum_iso_out.to_equiv.inv_fun w).property },
+      intro j,
+      rw lift_id,
+      apply hA, 
+      exact (i.enum_iso_out.to_equiv.inv_fun j).property }
   ... = κ : mul_eq_self hκ
 end
 
