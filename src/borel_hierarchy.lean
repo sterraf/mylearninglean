@@ -89,7 +89,7 @@ begin
   unfold sigma0,
   ext x, simp only [mem_empty_eq,iff_false],
   intro hx,
-  cases hx with _ _ _ _ _ _ f g glt hf,
+  induction' hx with _ _ _ _ _ _ _ f g glt hf IH,
   exact ordinal.not_lt_zero (g 0) (glt 0)
  end
 
@@ -99,10 +99,9 @@ begin
   rcases classical.em (i=0) with rfl | hi; unfold sigma0, rw sigma0_pi0_rec_def',
   { apply eq.symm, simp [range_eq_empty, ordinal.not_lt_zero] },
   { ext x, split; intro hx,
-    { cases hx with _ _ _ _ _ _ f g glt hf,
+    { induction' hx with _ _ _ _ _ _ i f g glt hf,
       existsi λn, (⟨f n, _⟩ : ↥⋃ j < i, pi0 s j),
-      { simp only [mem_Union,exists_prop,mem_range,exists_exists_eq_and],
-        ext x, split; intro hx, exacts [mem_Union.mp hx, mem_Union.mpr hx] },
+      { simp only [eq_self_iff_true] },
       { rw mem_Union,
       use g n,
       rw mem_Union,
@@ -136,14 +135,10 @@ lemma pi0_eq_compl_sigma0 (hi : ¬i = 0):
   pi0 s i = compl '' sigma0 s i :=
 begin
   unfold sigma0 pi0,
-  ext x, split; intro hx; cases hx with hcomp IH c d IH,
-  { contradiction },
-  { contradiction },
-  { contradiction },
+  ext x, split; intro hx; induction' hx with hcomp IH c d IH,
+  any_goals { contradiction },
   { simp only [mem_image], use d, tauto },
-  { have := sigma0_pi0_rec.compl IH.1,
-    rw ← IH.2,
-    assumption }
+  { have := sigma0_pi0_rec.compl IH.1, rwa ← IH.2 }
 end  
 
 lemma pi0_zero :
@@ -152,7 +147,7 @@ begin
   unfold pi0, ext,
   simp only [mem_insert_iff,union_insert,union_singleton],
   split; intro hx,
-  { cases hx with _ hx _ v hv,
+  { induction' hx with _ hx _ v hv,
     any_goals { tauto },
     simp only [sigma0_pi0_rec_def'] at hv,
     have : sigma0 s 0 v,
