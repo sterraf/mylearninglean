@@ -33,7 +33,7 @@ The `inductive` definition of `sigma0_pi0_rec` was suggested by Junyan Xu.
 
 ## References
 
-The definition of the hierarchy was extracted from [Kecrhis].
+The definition of the hierarchy was extracted from [Kechris].
 -/
 
 universe u 
