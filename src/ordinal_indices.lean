@@ -25,7 +25,7 @@ open set
 namespace cardinal
 
 /-!
-### Cardinal operations ranging over ordinals
+### Cardinal operations with ordinal indices
 
 Results on cardinality of ordinal-indexed families of sets.
 -/
@@ -35,7 +35,7 @@ open_locale cardinal
 /--
 Bounding the cardinal of an ordinal-indexed union of sets. 
 -/
-lemma mk_Union_le_of_le {β : Type* } {κ : cardinal} {i : ordinal}
+lemma mk_Union_ordinal_le_of_le {β : Type* } {κ : cardinal} {i : ordinal}
   (hi : i ≤ κ.ord) (hκ : ℵ₀ ≤ κ) (A : ordinal → set β)
   (hA : ∀ j < i, #↥(A j) ≤ κ) :
   #(↥⋃ j < i, A j) ≤ κ :=

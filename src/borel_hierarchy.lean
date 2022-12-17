@@ -87,7 +87,7 @@ lemma sigma0_zero :
   sigma0 s 0 = ∅ :=
 begin
   unfold sigma0,
-  ext x, simp only [mem_empty_eq,iff_false],
+  ext x, simp only [mem_empty_eq,iff_false], -- replace with `rw [mem_empty_iff_false, iff_false]` when updating
   intro hx,
   induction' hx with _ _ _ _ _ _ _ f g glt hf IH,
   exact ordinal.not_lt_zero (g 0) (glt 0)
@@ -442,7 +442,7 @@ begin
     repeat { simp only [mk_fintype,fintype.card_unique,nat.cast_one,mk_singleton],
       exact one_lt_aleph_0.le.trans C } },
   have K : #(↥⋃ j < i, compl '' sigma0 s j) ≤ (max (#s) 2) ^ aleph_0.{u},
-  { apply mk_Union_le_of_le,
+  { apply mk_Union_ordinal_le_of_le,
     exact (hi.trans $ ord_le_ord.mpr B),
     exact C,
     intros j hj,
