@@ -2,26 +2,6 @@ import set_theory.cardinal.cofinality
 
 universe u
 
-namespace cardinal
-
-/--
-The converse of the following lemma is false (take, for instance `i = ω+1` and `κ = ℵ₀`).
--/
-lemma card_le_of_le_ord {κ : cardinal} {i : ordinal} (hi : i ≤ κ.ord) :
-  i.card ≤ κ :=
-by { rw ← card_ord κ, exact ordinal.card_le_card hi}
-
-/-
--- We might add this notation later
-
-/-- `ℵ₁` is the second infinite cardinal. -/
-noncomputable def aleph_1 : cardinal.{u} := aleph 1
-
-localized "notation (name := cardinal.aleph_1) `ℵ₁` := cardinal.aleph_1" in cardinal
--/
-
-end cardinal
-
 namespace ordinal
 open cardinal
 open_locale ordinal cardinal

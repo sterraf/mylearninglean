@@ -1,6 +1,24 @@
-import omega_1
+import set_theory.cardinal.ordinal
 
-universe u
+namespace cardinal
+
+/--
+The converse of the following lemma is false (take, for instance `i = ω+1` and `κ = ℵ₀`).
+-/
+lemma card_le_of_le_ord {κ : cardinal} {i : ordinal} (hi : i ≤ κ.ord) :
+  i.card ≤ κ :=
+by { rw ← card_ord κ, exact ordinal.card_le_card hi}
+
+/-
+-- We might add this notation later
+
+/-- `ℵ₁` is the second infinite cardinal. -/
+noncomputable def aleph_1 : cardinal.{u} := aleph 1
+
+localized "notation (name := cardinal.aleph_1) `ℵ₁` := cardinal.aleph_1" in cardinal
+-/
+
+end cardinal
 
 open set
 
@@ -17,8 +35,8 @@ open_locale cardinal
 /--
 Bounding the cardinal of an ordinal-indexed union of sets. 
 -/
-lemma mk_Union_le_of_le {β : Type u} {κ : cardinal} {i : ordinal}
-  (hi : i ≤ κ.ord) (hκ : ℵ₀ ≤ κ) (A : ordinal.{u} → set β)
+lemma mk_Union_le_of_le {β : Type* } {κ : cardinal} {i : ordinal}
+  (hi : i ≤ κ.ord) (hκ : ℵ₀ ≤ κ) (A : ordinal → set β)
   (hA : ∀ j < i, #↥(A j) ≤ κ) :
   #(↥⋃ j < i, A j) ≤ κ :=
 begin
@@ -29,7 +47,7 @@ begin
   rw Union_congr_of_surjective i.enum_iso_out.to_fun
     i.enum_iso_out.to_equiv.surjective,
   rotate,
-  { have : ∀ (x : ↥(Iio.{u+1} i)), (λ y, A (i.enum_iso_out.inv_fun y)) (i.enum_iso_out.to_equiv.to_fun x) = A ↑x,
+  { have : ∀ (x : ↥(Iio i)), (λ y, A (i.enum_iso_out.inv_fun y)) (i.enum_iso_out.to_equiv.to_fun x) = A ↑x,
     { intro x, simp_rw (i.enum_iso_out.to_equiv.left_inv x) },
     exact this },
   calc

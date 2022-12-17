@@ -4,9 +4,9 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Author: Pedro Sánchez Terraf.
 -/
 import set_theory.cardinal.continuum
---import set_theory.cardinal.cofinality
 import measure_theory.measurable_space_def
 import ordinal_indices
+import omega_1
 import tactic.induction
 
 /-!
