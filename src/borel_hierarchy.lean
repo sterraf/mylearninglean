@@ -399,12 +399,11 @@ end
 
 end gen_measurable
 
+
 section card_gen_measurable
 
 /-!
 ### Cardinality of sigma-algebras
-
-This section includes the same results (with essentially the same proofs) from `measure_theory.card_measurable_space` by Gouëzel.
 -/
 
 variables {α : Type u} (s : set (set α)) (i k : ordinal.{u})
