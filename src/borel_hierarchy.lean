@@ -382,6 +382,7 @@ begin
   exact generate_measurable.union (λn, (f n).val) typf
 end
 
+/-- `generate_measurable_rec s` generates precisely the smallest sigma-algebra containing `s`. -/
 theorem generate_measurable_eq_gen_measurable :
   {t | generate_measurable s t} = gen_measurable s :=
 begin
@@ -402,6 +403,7 @@ end gen_measurable
 
 section card_gen_measurable
 
+/-
 /-!
 ### Cardinality of sigma-algebras
 -/
@@ -495,6 +497,8 @@ end
 theorem cardinal_measurable_set_le_continuum :
   #s ≤ 𝔠 → #{t | @measurable_set α (generate_from s) t} ≤ 𝔠 :=
 cardinal_generate_measurable_le_continuum _
+
+-/
 
 end card_gen_measurable
 
