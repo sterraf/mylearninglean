@@ -1,4 +1,5 @@
 import set_theory.cardinal.ordinal
+import set_theory.cardinal.cofinality
 
 namespace cardinal
 
@@ -24,6 +25,8 @@ open set
 
 namespace cardinal
 
+universes u v
+
 /-!
 ### Cardinal operations with ordinal indices
 
@@ -31,6 +34,47 @@ Results on cardinality of ordinal-indexed families of sets.
 -/
 
 open_locale cardinal
+
+set_option pp.universes true
+-- cardinal.basic
+#check cardinal.le_sum -- for universe issues only
+#check cardinal.sum_add_distrib -- for universe issues only
+#check cardinal.sum_add_distrib' -- for universe issues only
+#check cardinal.lift_sum -- for universe issues only
+#check cardinal.sum_le_sum -- for universe issues only
+#check cardinal.bdd_above_range -- for universe issues only
+#check cardinal.supr_le_sum -- for universe issues only
+#check cardinal.sum_le_supr_lift
+#check cardinal.sum_le_supr
+#check cardinal.supr_of_empty -- for universe issues only
+#check cardinal.prod_const
+#check cardinal.prod_le_prod -- for universe issues only
+#check cardinal.prod_eq_zero -- for universe issues only
+#check cardinal.prod_ne_zero -- for universe issues only
+#check cardinal.lift_prod
+#check cardinal.lift_supr -- for universe issues only
+#check cardinal.to_nat_finset_prod
+#check cardinal.sum_lt_prod -- for universe issues only
+
+-- ordinal.arithmetic
+#check ordinal.supr_ord -- for universe issues only
+
+-- cardinal.ordinal
+#check cardinal.prod_eq_two_power
+
+-- ordinal.cofinality
+#check ordinal.supr_lt_lift -- for universe issues only
+#check ordinal.supr_lt -- for universe issues only
+#check cardinal.supr_lt_lift_of_is_regular
+#check cardinal.supr_lt_of_is_regular
+#check cardinal.sum_lt_lift_of_is_regular
+#check cardinal.sum_lt_of_is_regular
+#check ordinal.supr_lt_lift
+#check ordinal.supr_lt
+#check cardinal.supr_lt_lift_of_is_regular
+#check cardinal.supr_lt_of_is_regular
+#check cardinal.sum_lt_lift_of_is_regular
+#check cardinal.sum_lt_of_is_regular
 
 /--
 Bounding the cardinal of an ordinal-indexed union of sets. 
