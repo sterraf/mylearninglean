@@ -87,7 +87,7 @@ lemma sigma0_zero :
   sigma0 s 0 = ∅ :=
 begin
   unfold sigma0,
-  ext x, simp only [mem_empty_eq,iff_false], -- replace with `rw [mem_empty_iff_false, iff_false]` when updating
+  ext x, rw [mem_empty_iff_false, iff_false],
   intro hx,
   induction' hx with _ _ _ _ _ _ _ f g glt hf IH,
   exact ordinal.not_lt_zero (g 0) (glt 0)

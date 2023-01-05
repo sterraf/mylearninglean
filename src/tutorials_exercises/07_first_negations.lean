@@ -1,4 +1,4 @@
-import tuto_lib
+import libs.tuto_lib
 import data.int.parity
 /-
 Negations, proof by contradiction and contraposition.

@@ -256,6 +256,8 @@ begin
   exact h.2 eqxy
 end
 
+end
+
 /-!
 ### Disjunction
 -/
@@ -291,7 +293,5 @@ proof by contradiction, and more.
 
 But this should get you started, and you can consult the resources for more.
 -/
-
-end
 
 end

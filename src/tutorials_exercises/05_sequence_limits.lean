@@ -1,6 +1,6 @@
 import data.real.basic
 import algebra.group.pi
-import tuto_lib
+import libs.tuto_lib
 
 notation `|`x`|` := abs x
 
