@@ -1,7 +1,59 @@
 import borel_hierarchy
 import topology.separation
+import topology.bases
 
 open topological_space
+
+namespace borel_classes
+
+open pointclasses
+
+variables {α : Type*} [topological_space α] [second_countable_topology α]
+
+/-
+def sigma0_pi0_rec : ordinal → bool → set α → Prop :=
+  pointclasses.sigma0_pi0_rec (countable_basis α)
+
+def sigma0 : ordinal → set (set α) := pointclasses.sigma0 (countable_basis α)
+
+def pi0 : ordinal → set (set α) := pointclasses.pi0 (countable_basis α)
+-/
+
+lemma sigma0_one : sigma0 (countable_basis α) 1 = {u : set α | is_open u} :=
+begin
+  ext z, refine ⟨λ hz, _, λ hz, _⟩,
+  { rw pointclasses.sigma0_one at hz,
+    simp only [set.mem_range, set.mem_set_of_eq] at *,
+    rcases hz with ⟨y,rfl⟩,
+    apply is_open_Union,
+    intro i,
+    rcases (y i).property with h | h | h,
+    { exact is_open_of_mem_countable_basis h },
+    { rw h, exact is_open_empty },
+    { simp only [set.mem_singleton_iff, subtype.val_eq_coe] at *,
+      rw h, exact is_open_univ } },
+  { rw [set.mem_set_of_eq,
+      is_topological_basis.open_iff_eq_sUnion (is_basis_countable_basis α)] at hz,
+    rcases hz with ⟨S,hS,hz⟩,
+    rw pointclasses.sigma0_one,
+    rcases classical.em (S=∅) with rfl | nonemp,
+    { existsi λ n, (⟨∅,_⟩ : ↥(countable_basis α ∪ {∅, set.univ})),
+      { simp only [set.Union_empty],
+        rw set.sUnion_empty at hz,
+        exact hz.symm },
+      { simp only [set.mem_insert_iff, true_or, eq_self_iff_true, set.union_insert, set.union_singleton] } },
+    { rw set.sUnion_eq_Union at hz,
+      have Sc : S.countable := set.countable.mono hS (countable_basis α).to_countable,
+      have gsurj : ∃ (g : ℕ → S), g.surjective := (set.countable_iff_exists_surjective (set.nonempty_iff_ne_empty.mpr nonemp)).mp Sc,
+      cases gsurj with g hg,
+      use set.inclusion (set.subset_union_of_subset_left hS {∅, set.univ}) ∘ g,
+      simp only [subtype.val_eq_coe, set.coe_inclusion],
+      rw ← set.Union_congr_of_surjective g hg at hz,
+      swap 3,
+      exacts [λ n, (g n).val, hz.symm, λ n, eq.refl (g n)] } }
+end
+
+end borel_classes
 
 section zero_dim_space
 
@@ -22,18 +74,10 @@ section profinite
 
 variables [t2_space α]
 
-/- Random lemma (originally w/o the prime) now using typeclass -/
-lemma tot_sep_of_zero_dim' [h : zero_dim_space α]:
+/- Old mathlib lemma recovered using typeclass -/
+lemma tot_sep_of_zero_dim [h : zero_dim_space α] :
   totally_separated_space α :=
-begin
-  constructor,
-  rintros x - y - hxy,
-  obtain ⟨u, v, hu, hv, xu, yv, disj⟩ := t2_separation hxy,
-  obtain ⟨w, hw : is_clopen w, xw, wu⟩ := (is_topological_basis.mem_nhds_iff h.has_clopen_basis).1
-    (is_open.mem_nhds hu xu),
-  refine ⟨w, wᶜ, hw.1, hw.compl.1, xw, λ h, disj ⟨wu h, yv⟩, _, disjoint_compl_right⟩,
-  rw set.union_compl_self,
-end
+  totally_separated_space_of_t1_of_basis_clopen h.has_clopen_basis
 
 end profinite
 
@@ -50,7 +94,7 @@ theorem loc_compact_t2_tot_disc_iff_tot_sep' :
 begin
   split,
   { introI h,
-    exact tot_sep_of_zero_dim', },
+    exact tot_sep_of_zero_dim, },
   apply totally_separated_space.totally_disconnected_space,
 end
 
