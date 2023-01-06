@@ -67,6 +67,12 @@ begin
     simp only [compl_compl, is_open_compl_iff, and_true, eq_self_iff_true,hz] }
 end
 
+/-- The *ambiguous* Borel classes, comprising sets that are both `sigma0` and `pi0`. -/
+def delta0 (i : ordinal) : set (set α) := sigma0 (countable_basis α) i ∩ pi0 (countable_basis α) i
+
+lemma delta0_one : delta0 1 = {u : set α | is_clopen u} :=
+by { rw [delta0, sigma0_one, pi0_one], tauto }
+
 end borel_classes
 
 section zero_dim_space
