@@ -54,6 +54,19 @@ begin
       exacts [λ n, (g n).val, hz.symm, λ n, eq.refl (g n)] } }
 end
 
+lemma pi0_one : pi0 (countable_basis α) 1 = {u : set α | is_closed u} :=
+begin
+  rw [pi0_eq_compl_sigma0 _ _ (zero_ne_one).symm, sigma0_one],
+  ext z, refine ⟨λ hz, _, λ hz, _⟩,
+  { rcases hz with ⟨x,hx,co⟩,
+    rw eq_compl_comm.mp (eq.symm co) at hx,
+    exact ⟨hx⟩ },
+  { change is_closed z at hz,
+    change ∃ (x : set α), is_open x ∧ xᶜ = z,
+    use zᶜ,
+    simp only [compl_compl, is_open_compl_iff, and_true, eq_self_iff_true,hz] }
+end
+
 end borel_classes
 
 section zero_dim_space
