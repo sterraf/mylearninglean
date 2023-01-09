@@ -6,23 +6,23 @@ open topological_space
 
 namespace borel_classes
 
-open set pointclasses
+open set pointclass
 
 variables {α : Type*} [topological_space α] [second_countable_topology α]
 
 /-
 def sigma0_pi0_rec : ordinal → bool → set α → Prop :=
-  pointclasses.sigma0_pi0_rec (countable_basis α)
+  pointclass.sigma0_pi0_rec (countable_basis α)
 
-def sigma0 : ordinal → set (set α) := pointclasses.sigma0 (countable_basis α)
+def sigma0 : ordinal → set (set α) := pointclass.sigma0 (countable_basis α)
 
-def pi0 : ordinal → set (set α) := pointclasses.pi0 (countable_basis α)
+def pi0 : ordinal → set (set α) := pointclass.pi0 (countable_basis α)
 -/
 
 lemma sigma0_one : sigma0 (countable_basis α) 1 = {u : set α | is_open u} :=
 begin
   ext z, refine ⟨λ hz, _, λ hz, _⟩,
-  { rw pointclasses.sigma0_one at hz,
+  { rw pointclass.sigma0_one at hz,
     simp only [mem_range, mem_set_of_eq] at *,
     rcases hz with ⟨y, rfl⟩,
     apply is_open_Union,
@@ -35,7 +35,7 @@ begin
   { rw [mem_set_of_eq,
       is_topological_basis.open_iff_eq_sUnion (is_basis_countable_basis α)] at hz,
     rcases hz with ⟨S, hS, hz⟩,
-    rw pointclasses.sigma0_one,
+    rw pointclass.sigma0_one,
     rcases classical.em (S=∅) with rfl | nonemp,
     { existsi λ n, (⟨∅, _⟩ : ↥(countable_basis α ∪ {∅, univ})),
       { simp only [Union_empty],
