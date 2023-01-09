@@ -24,7 +24,7 @@ begin
   ext z, refine ⟨λ hz, _, λ hz, _⟩,
   { rw pointclasses.sigma0_one at hz,
     simp only [mem_range, mem_set_of_eq] at *,
-    rcases hz with ⟨y,rfl⟩,
+    rcases hz with ⟨y, rfl⟩,
     apply is_open_Union,
     intro i,
     rcases (y i).property with h | h | h,
@@ -34,10 +34,10 @@ begin
       rw h, exact is_open_univ } },
   { rw [mem_set_of_eq,
       is_topological_basis.open_iff_eq_sUnion (is_basis_countable_basis α)] at hz,
-    rcases hz with ⟨S,hS,hz⟩,
+    rcases hz with ⟨S, hS, hz⟩,
     rw pointclasses.sigma0_one,
     rcases classical.em (S=∅) with rfl | nonemp,
-    { existsi λ n, (⟨∅,_⟩ : ↥(countable_basis α ∪ {∅, univ})),
+    { existsi λ n, (⟨∅, _⟩ : ↥(countable_basis α ∪ {∅, univ})),
       { simp only [Union_empty],
         rw sUnion_empty at hz,
         exact hz.symm },
@@ -58,13 +58,13 @@ lemma pi0_one : pi0 (countable_basis α) 1 = {u : set α | is_closed u} :=
 begin
   rw [pi0_eq_compl_sigma0 _ _ (zero_ne_one).symm, sigma0_one],
   ext z, refine ⟨λ hz, _, λ hz, _⟩,
-  { rcases hz with ⟨x,hx,co⟩,
+  { rcases hz with ⟨x, hx, co⟩,
     rw eq_compl_comm.mp (eq.symm co) at hx,
     exact ⟨hx⟩ },
   { change is_closed z at hz,
     change ∃ (x : set α), is_open x ∧ xᶜ = z,
     use zᶜ,
-    simp only [compl_compl, is_open_compl_iff, and_true, eq_self_iff_true,hz] }
+    simp only [compl_compl, is_open_compl_iff, and_true, eq_self_iff_true, hz] }
 end
 
 /-- The *ambiguous* Borel classes, comprising sets that are both `sigma0` and `pi0`. -/
