@@ -4,7 +4,7 @@ import topology.bases
 
 open topological_space
 
-namespace borel_classes
+namespace borel_class
 
 open set pointclass
 
@@ -73,7 +73,7 @@ def delta0 (i : ordinal) : set (set α) := sigma0 (countable_basis α) i ∩ pi0
 lemma delta0_one : delta0 1 = {u : set α | is_clopen u} :=
 by { rw [delta0, sigma0_one, pi0_one], tauto }
 
-end borel_classes
+end borel_class
 
 section zero_dim_space
 
