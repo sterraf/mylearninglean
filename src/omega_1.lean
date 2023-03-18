@@ -44,6 +44,7 @@ begin
   exact aleph_0_lt_aleph_one,
 end
 
+-- NOTE: the following lemma is now out of the `borel_hierarchy` PR
 /--
 Denumerably many elements chosen from a nondecreasing `ω₁`-sequence of sets,
 all lie in one of the sets.
